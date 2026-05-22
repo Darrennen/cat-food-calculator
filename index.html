@@ -598,40 +598,84 @@
 
   function update(id, field, value) {
     const r = rows.find(r => r.id === id);
-    if (r) {
-      r[field] = value;
+    if (!r) return;
+    r[field] = value;
+
+    // Unit and category changes need a full re-render (no active typing involved)
+    if (field === 'unit' || field === 'category') {
       renderAll();
+      return;
     }
+
+    // All other fields: only update derived display elements so typed inputs keep focus
+    const visible = activeFilter === 'All'
+      ? rows
+      : rows.filter(row => row.category === activeFilter);
+    const idx = visible.findIndex(row => row.id === id);
+
+    // Row is hidden by current filter — just refresh summary
+    if (idx === -1) { renderSummary(); return; }
+
+    const cur = currency();
+
+    // Refresh result cell (driven by amount + price)
+    const resultCells = document.querySelectorAll('.result-cell');
+    if (resultCells[idx]) {
+      const res = calcResult(r);
+      resultCells[idx].className = `result-cell ${res ? '' : 'empty'}`;
+      resultCells[idx].textContent = res ? `${cur}${res.value} ${res.label}` : '—';
+    }
+
+    // Refresh stock badge + row highlight
+    if (field === 'stock') {
+      const lowStock = value !== '' && parseFloat(value) <= 1;
+      const trs = document.querySelectorAll('#rows tr');
+      if (trs[idx]) {
+        trs[idx].classList.toggle('low-stock', lowStock);
+        const wrap = trs[idx].querySelector('.stock-wrap');
+        if (wrap) {
+          const badge = wrap.querySelector('.low-badge');
+          if (lowStock && !badge) {
+            const span = document.createElement('span');
+            span.className = 'low-badge';
+            span.textContent = 'LOW';
+            wrap.appendChild(span);
+          } else if (!lowStock && badge) {
+            badge.remove();
+          }
+        }
+      }
+    }
+
+    renderSummary();
   }
 
   function renderSummary() {
     const sumEl = document.getElementById('summary');
     const cur   = currency();
-
-    const withResult = rows.filter(r => calcResult(r)).map(r => ({ ...r, res: calcResult(r) }));
-    const lowItems   = rows.filter(r => r.stock !== '' && parseFloat(r.stock) <= 1);
-
-    if (withResult.length < 2 && lowItems.length === 0) {
-      sumEl.style.display = 'none';
-      return;
-    }
-
     const parts = [];
 
-    if (withResult.length >= 2) {
-      const sorted = [...withResult].sort((a, b) => parseFloat(a.res.value) - parseFloat(b.res.value));
-      const best  = sorted[0];
-      const worst = sorted[sorted.length - 1];
-      const name  = r => r.product || `Row ${rows.indexOf(rows.find(x => x.id === r.id)) + 1}`;
-      parts.push(`<span><strong>Best value:</strong> ${name(best)} — ${cur}${best.res.value} ${best.res.label}</span>`);
-      parts.push(`<span><strong>Most expensive:</strong> ${name(worst)} — ${cur}${worst.res.value} ${worst.res.label}</span>`);
+    // Compare within the same unit type (g vs g, kg vs kg) so numbers are meaningful
+    for (const unit of ['g', 'kg']) {
+      const group = rows.filter(r => r.unit === unit && calcResult(r));
+      if (group.length >= 2) {
+        const sorted = [...group].sort((a, b) => parseFloat(calcResult(a).value) - parseFloat(calcResult(b).value));
+        const best  = sorted[0];
+        const worst = sorted[sorted.length - 1];
+        const name  = r => r.product || `Row ${rows.indexOf(r) + 1}`;
+        const label = unit === 'g' ? '/ 100g' : '/ kg';
+        parts.push(`<span><strong>Best (${unit}):</strong> ${name(best)} — ${cur}${calcResult(best).value} ${label}</span>`);
+        parts.push(`<span><strong>Priciest (${unit}):</strong> ${name(worst)} — ${cur}${calcResult(worst).value} ${label}</span>`);
+      }
     }
 
+    const lowItems = rows.filter(r => r.stock !== '' && parseFloat(r.stock) <= 1);
     if (lowItems.length > 0) {
       const names = lowItems.map(r => r.product || 'Unnamed').join(', ');
       parts.push(`<span>🔴 <strong>Low stock:</strong> ${names}</span>`);
     }
 
+    if (parts.length === 0) { sumEl.style.display = 'none'; return; }
     sumEl.style.display = 'flex';
     sumEl.innerHTML = parts.join('');
   }
