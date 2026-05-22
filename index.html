@@ -386,13 +386,80 @@
       margin-top: 5px;
       padding-left: 2px;
     }
+
+    /* ── Header layout ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .header-text h1 { font-size: 18px; font-weight: 600; }
+    .header-text p  { font-size: 12px; color: #888; margin-top: 2px; }
+
+    .dark-toggle {
+      flex-shrink: 0;
+      background: none;
+      border: 1.5px solid #e0e0e0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 17px;
+      padding: 5px 9px;
+      line-height: 1;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .dark-toggle:hover { background: #f0f0f0; }
+
+    /* ── Dark mode overrides ── */
+    html.dark body                { background: #1c1c1e; color: #f0f0f0; }
+    html.dark header              { background: #2c2c2e; border-color: #3a3a3c; }
+    html.dark .header-text p      { color: #888; }
+    html.dark .dark-toggle        { border-color: #3a3a3c; color: #f0f0f0; }
+    html.dark .dark-toggle:hover  { background: #3a3a3c; }
+    html.dark .toolbar label      { color: #aaa; }
+    html.dark .toolbar select     { background: #3a3a3c; border-color: #545458; color: #f0f0f0; }
+    html.dark .filter-pill        { background: #2c2c2e; border-color: #3a3a3c; color: #aaa; }
+    html.dark .table-wrap         { background: #2c2c2e; border-color: #3a3a3c; }
+    html.dark thead tr            { background: #3a3a3c; }
+    html.dark th                  { color: #888; border-color: #3a3a3c; }
+    html.dark td                  { border-color: #333336; }
+    html.dark tr:last-child td    { border-bottom: none; }
+    html.dark tr.low-stock td     { background: #3a2a1a; }
+    html.dark td.row-num          { color: #666; }
+    html.dark .cat-Food           { background: #3a2210; }
+    html.dark .cat-Litter         { background: #221a40; }
+    html.dark .cat-Treats         { background: #3a1020; }
+    html.dark .cat-Supplements    { background: #102a18; }
+    html.dark .cat-               { background: #3a3a3c; color: #aaa; }
+    html.dark .unit-toggle        { background: #3a3a3c; }
+    html.dark .unit-toggle button { color: #aaa; }
+    html.dark .unit-toggle button.active { background: #545458; color: #f0f0f0; box-shadow: none; }
+    html.dark input[type="text"],
+    html.dark input[type="number"],
+    html.dark input[type="date"]  { background: #3a3a3c; border-color: #545458; color: #f0f0f0; }
+    html.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    html.dark .result-cell.empty  { color: #555; }
+    html.dark .cat-pill           { background: #3a3a3c; border-color: #545458; color: #aaa; }
+    html.dark .rating-wrap button { background: #3a3a3c; border-color: #545458; }
+    html.dark .rating-wrap button.selected { background: #545458; }
+    html.dark .add-row            { background: #2c2c2e; border-color: #545458; color: #007aff; }
+    html.dark .add-row:hover      { background: #1a2a3a; border-color: #007aff; }
+    html.dark .summary            { background: #2c2c2e; border-color: #3a3a3c; color: #aaa; }
+    html.dark .summary strong     { color: #f0f0f0; }
+    html.dark .btn-del            { color: #555; }
+    html.dark .btn-del:hover      { color: #ff453a; }
   </style>
 </head>
 <body>
 
 <header>
-  <h1>🐱 Cat Product Tracker</h1>
-  <p>Price, stock, preferences — all in one place</p>
+  <div class="header-text">
+    <h1>🐱 Cat Product Tracker</h1>
+    <p>Price, stock, preferences — all in one place</p>
+  </div>
+  <button class="dark-toggle" id="dark-btn" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
 </header>
 
 <div class="container">
@@ -465,6 +532,26 @@
 </div>
 
 <script>
+  // Dark mode — persist preference
+  (function () {
+    if (localStorage.getItem('dark') === '1') {
+      document.documentElement.classList.add('dark');
+    }
+  })();
+
+  function toggleDark() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('dark', isDark ? '1' : '0');
+    document.getElementById('dark-btn').textContent = isDark ? '☀️' : '🌙';
+  }
+
+  // Sync button label on load
+  window.addEventListener('DOMContentLoaded', () => {
+    if (document.documentElement.classList.contains('dark')) {
+      document.getElementById('dark-btn').textContent = '☀️';
+    }
+  });
+
   let rows = [];
   let nextId = 1;
   let activeFilter = 'All';
