@@ -214,8 +214,40 @@
     td.col-store  { width: 110px; }
     td.col-stock  { width: 70px; }
     td.col-rating { width: 90px; }
+    td.col-cats   { width: 150px; }
     td.col-notes  { min-width: 140px; }
     td.col-del    { width: 36px; text-align: center; }
+
+    /* ── Cat picker ── */
+    .cat-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+    }
+
+    .cat-pill {
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      color: #888;
+      transition: all 0.12s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .cat-pill.on {
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .cat-pill.on[data-cat="Macson"]   { background: #007aff; }
+    .cat-pill.on[data-cat="Miumiu"]   { background: #ff2d55; }
+    .cat-pill.on[data-cat="Duoduo"]   { background: #ff9500; }
+    .cat-pill.on[data-cat="Llaollao"] { background: #34c759; }
 
     /* ── Result cell ── */
     .result-cell {
@@ -403,6 +435,7 @@
           <th>Store</th>
           <th>Stock</th>
           <th>Cat likes?</th>
+          <th>For cats</th>
           <th>Notes</th>
           <th></th>
         </tr>
@@ -436,8 +469,9 @@
   let nextId = 1;
   let activeFilter = 'All';
 
-  const RATINGS = ['😻', '😐', '😾'];
-  const CATS    = ['', 'Food', 'Litter', 'Treats', 'Supplements'];
+  const RATINGS  = ['😻', '😐', '😾'];
+  const CATS     = ['', 'Food', 'Litter', 'Treats', 'Supplements'];
+  const CAT_NAMES = ['Macson', 'Miumiu', 'Duoduo', 'Llaollao'];
 
   const currency = () => document.getElementById('currency').value;
 
@@ -463,6 +497,7 @@
       store: '',
       stock: '',
       rating: '',
+      forCats: [],
       notes: '',
     });
     renderAll();
@@ -480,6 +515,30 @@
   function setUnit(id, unit) {
     const r = rows.find(r => r.id === id);
     if (r) { r.unit = unit; renderAll(); }
+  }
+
+  function toggleCat(id, catName) {
+    const r = rows.find(r => r.id === id);
+    if (!r) return;
+    const i = r.forCats.indexOf(catName);
+    if (i === -1) r.forCats.push(catName);
+    else r.forCats.splice(i, 1);
+    // Only re-render the cat-pills cell for this row
+    const visible = activeFilter === 'All' ? rows : rows.filter(row => row.category === activeFilter);
+    const idx = visible.findIndex(row => row.id === id);
+    if (idx !== -1) {
+      const trs = document.querySelectorAll('#rows tr');
+      const pillWrap = trs[idx] && trs[idx].querySelector('.cat-pills');
+      if (pillWrap) pillWrap.innerHTML = catPillsHTML(r);
+    }
+    renderSummary();
+  }
+
+  function catPillsHTML(row) {
+    return CAT_NAMES.map(n =>
+      `<button class="cat-pill${row.forCats.includes(n) ? ' on' : ''}" data-cat="${n}"
+        onclick="toggleCat(${row.id},'${n}')">${n}</button>`
+    ).join('');
   }
 
   function setRating(id, emoji) {
@@ -580,6 +639,9 @@
                 title="${e === '😻' ? 'Love' : e === '😐' ? 'OK' : 'Reject'}">${e}</button>
             `).join('')}
           </div>
+        </td>
+        <td class="col-cats">
+          <div class="cat-pills">${catPillsHTML(row)}</div>
         </td>
         <td class="col-notes">
           <input type="text" placeholder="remarks…"
@@ -694,7 +756,7 @@
     const header = [
       '#', 'Category', 'Unit', 'Product',
       `Pack Size`, `Total Price (${cur})`, 'Price per Unit',
-      'Date Bought', 'Store', 'Stock (packs)', 'Cat Likes?', 'Notes',
+      'Date Bought', 'Store', 'Stock (packs)', 'Cat Likes?', 'For Cats', 'Notes',
     ];
 
     const dataRows = rows.map((row, idx) => {
@@ -712,6 +774,7 @@
         row.store,
         row.stock !== '' ? parseFloat(row.stock) : '',
         row.rating,
+        row.forCats.join(', '),
         row.notes,
       ];
     });
@@ -730,6 +793,7 @@
       { wch: 14 },  // Store
       { wch: 10 },  // Stock
       { wch: 10 },  // Rating
+      { wch: 32 },  // For Cats
       { wch: 28 },  // Notes
     ];
 
