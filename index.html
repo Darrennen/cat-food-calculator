@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cat Product Tracker</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 14px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 { font-size: 18px; font-weight: 600; }
+    header p  { font-size: 12px; color: #888; margin-top: 2px; }
+
+    .container {
+      padding: 14px 16px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .toolbar label {
+      font-size: 13px;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toolbar select {
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 13px;
+      background: #fff;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Category filter pills */
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .filter-pill {
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: #555;
+    }
+
+    .filter-pill.active {
+      border-color: transparent;
+      color: #fff;
+    }
+
+    .filter-pill[data-cat="All"].active      { background: #555; }
+    .filter-pill[data-cat="Food"].active     { background: #ff9500; }
+    .filter-pill[data-cat="Litter"].active   { background: #5856d6; }
+    .filter-pill[data-cat="Treats"].active   { background: #ff2d55; }
+    .filter-pill[data-cat="Supplements"].active { background: #34c759; }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e0e0e0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 900px;
+    }
+
+    thead tr { background: #f7f7f7; }
+
+    th {
+      padding: 9px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #888;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 5px 7px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    /* low stock row highlight */
+    tr.low-stock td { background: #fff8f0; }
+
+    td.row-num {
+      font-size: 11px;
+      color: #bbb;
+      text-align: center;
+      width: 28px;
+    }
+
+    /* ── Category badge ── */
+    .cat-select {
+      border: none;
+      border-radius: 5px;
+      padding: 4px 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      width: 100px;
+    }
+
+    .cat-Food        { background: #fff3e0; color: #e65100; }
+    .cat-Litter      { background: #ede7f6; color: #4527a0; }
+    .cat-Treats      { background: #fce4ec; color: #ad1457; }
+    .cat-Supplements { background: #e8f5e9; color: #2e7d32; }
+    .cat-            { background: #f5f5f5; color: #888; }
+
+    /* ── Unit toggle ── */
+    .unit-toggle {
+      display: flex;
+      background: #f0f0f0;
+      border-radius: 6px;
+      overflow: hidden;
+      width: 68px;
+      height: 30px;
+    }
+
+    .unit-toggle button {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      color: #888;
+      transition: background 0.15s, color 0.15s;
+      padding: 0;
+    }
+
+    .unit-toggle button.active {
+      background: #fff;
+      color: #1d1d1f;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    /* ── Inputs ── */
+    input[type="text"],
+    input[type="number"],
+    input[type="date"] {
+      width: 100%;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 5px 7px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #fff;
+      color: #1d1d1f;
+      outline: none;
+      transition: border-color 0.15s;
+      -moz-appearance: textfield;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    input:focus { border-color: #007aff; }
+
+    td.col-amount { width: 90px; }
+    td.col-price  { width: 90px; }
+    td.col-result { width: 130px; }
+    td.col-date   { width: 120px; }
+    td.col-store  { width: 110px; }
+    td.col-stock  { width: 70px; }
+    td.col-rating { width: 90px; }
+    td.col-notes  { min-width: 140px; }
+    td.col-del    { width: 36px; text-align: center; }
+
+    /* ── Result cell ── */
+    .result-cell {
+      font-size: 12px;
+      font-weight: 600;
+      color: #007aff;
+      white-space: nowrap;
+    }
+
+    .result-cell.empty { color: #ccc; font-weight: 400; }
+
+    /* ── Stock cell ── */
+    .stock-wrap {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .low-badge {
+      font-size: 9px;
+      font-weight: 700;
+      background: #ff3b30;
+      color: #fff;
+      border-radius: 4px;
+      padding: 1px 4px;
+      white-space: nowrap;
+    }
+
+    /* ── Rating picker ── */
+    .rating-wrap {
+      display: flex;
+      gap: 3px;
+    }
+
+    .rating-wrap button {
+      border: 1.5px solid #e0e0e0;
+      background: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 5px;
+      line-height: 1.4;
+      transition: all 0.12s;
+      opacity: 0.45;
+    }
+
+    .rating-wrap button.selected {
+      border-color: transparent;
+      background: #f0f0f0;
+      opacity: 1;
+      transform: scale(1.15);
+    }
+
+    /* ── Delete ── */
+    .btn-del {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      color: #ccc;
+      padding: 4px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+
+    .btn-del:hover { color: #ff3b30; }
+
+    /* ── Bottom actions ── */
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .add-row {
+      flex: 1;
+      min-width: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: #fff;
+      border: 1.5px dashed #d0d0d0;
+      border-radius: 10px;
+      padding: 11px 14px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #007aff;
+      font-weight: 500;
+      transition: border-color 0.15s, background 0.15s;
+      font-family: inherit;
+    }
+
+    .add-row:hover { background: #f0f7ff; border-color: #007aff; }
+    .add-row span  { font-size: 18px; line-height: 1; }
+
+    .btn-export {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #34c759;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      font-family: inherit;
+    }
+
+    .btn-export:hover  { background: #28a745; }
+    .btn-export:active { transform: scale(0.97); }
+
+    /* ── Summary ── */
+    .summary {
+      margin-top: 12px;
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e0e0e0;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #555;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .summary strong { color: #1d1d1f; }
+
+    .hint {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 5px;
+      padding-left: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🐱 Cat Product Tracker</h1>
+  <p>Price, stock, preferences — all in one place</p>
+</header>
+
+<div class="container">
+
+  <div class="toolbar">
+    <label>
+      Currency
+      <select id="currency">
+        <option value="$">$ USD</option>
+        <option value="HK$">HK$</option>
+        <option value="RM">RM MYR</option>
+        <option value="£">£ GBP</option>
+        <option value="€">€ EUR</option>
+        <option value="¥">¥ JPY</option>
+        <option value="S$">S$ SGD</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="filter-bar" id="filter-bar">
+    <button class="filter-pill active" data-cat="All"         onclick="setFilter('All')">All</button>
+    <button class="filter-pill"        data-cat="Food"        onclick="setFilter('Food')">🍖 Food</button>
+    <button class="filter-pill"        data-cat="Litter"      onclick="setFilter('Litter')">🪨 Litter</button>
+    <button class="filter-pill"        data-cat="Treats"      onclick="setFilter('Treats')">🎁 Treats</button>
+    <button class="filter-pill"        data-cat="Supplements" onclick="setFilter('Supplements')">💊 Supplements</button>
+  </div>
+
+  <div class="table-wrap">
+    <table id="main-table">
+      <thead>
+        <tr>
+          <th style="width:28px">#</th>
+          <th>Category</th>
+          <th style="width:76px">Unit</th>
+          <th>Product</th>
+          <th>Pack size</th>
+          <th>Total price</th>
+          <th>Price / unit</th>
+          <th>Date bought</th>
+          <th>Store</th>
+          <th>Stock</th>
+          <th>Cat likes?</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <p class="hint">* g → price per 100g &nbsp;|&nbsp; kg → price per kg &nbsp;|&nbsp; 🔴 LOW = ≤ 1 pack left</p>
+
+  <div class="actions">
+    <button class="add-row" onclick="addRow()">
+      <span>+</span> Add row
+    </button>
+    <button class="btn-export" onclick="exportToExcel()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export to Excel
+    </button>
+  </div>
+
+  <div class="summary" id="summary" style="display:none"></div>
+
+</div>
+
+<script>
+  let rows = [];
+  let nextId = 1;
+  let activeFilter = 'All';
+
+  const RATINGS = ['😻', '😐', '😾'];
+  const CATS    = ['', 'Food', 'Litter', 'Treats', 'Supplements'];
+
+  const currency = () => document.getElementById('currency').value;
+
+  document.getElementById('currency').addEventListener('change', renderAll);
+
+  function setFilter(cat) {
+    activeFilter = cat;
+    document.querySelectorAll('.filter-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.cat === cat);
+    });
+    renderAll();
+  }
+
+  function addRow(unit = 'g') {
+    rows.push({
+      id: nextId++,
+      category: '',
+      unit,
+      product: '',
+      amount: '',
+      price: '',
+      date: '',
+      store: '',
+      stock: '',
+      rating: '',
+      notes: '',
+    });
+    renderAll();
+    setTimeout(() => {
+      const inputs = document.querySelectorAll('.product-input');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }, 50);
+  }
+
+  function deleteRow(id) {
+    rows = rows.filter(r => r.id !== id);
+    renderAll();
+  }
+
+  function setUnit(id, unit) {
+    const r = rows.find(r => r.id === id);
+    if (r) { r.unit = unit; renderAll(); }
+  }
+
+  function setRating(id, emoji) {
+    const r = rows.find(r => r.id === id);
+    if (r) {
+      r.rating = r.rating === emoji ? '' : emoji;
+      renderAll();
+    }
+  }
+
+  function calcResult(row) {
+    const amount = parseFloat(row.amount);
+    const price  = parseFloat(row.price);
+    if (!amount || !price || amount <= 0 || price <= 0) return null;
+    if (row.unit === 'g') {
+      return { value: (price / amount * 100).toFixed(2), label: '/ 100g' };
+    } else {
+      return { value: (price / amount).toFixed(2), label: '/ kg' };
+    }
+  }
+
+  function renderAll() {
+    const tbody  = document.getElementById('rows');
+    tbody.innerHTML = '';
+    const cur    = currency();
+
+    const visible = activeFilter === 'All'
+      ? rows
+      : rows.filter(r => r.category === activeFilter);
+
+    visible.forEach((row, idx) => {
+      const result   = calcResult(row);
+      const lowStock = row.stock !== '' && parseFloat(row.stock) <= 1;
+
+      const tr = document.createElement('tr');
+      if (lowStock) tr.classList.add('low-stock');
+
+      tr.innerHTML = `
+        <td class="row-num">${idx + 1}</td>
+        <td>
+          <select class="cat-select cat-${row.category}"
+            onchange="update(${row.id},'category',this.value);this.className='cat-select cat-'+this.value">
+            <option value="">— pick —</option>
+            ${CATS.filter(Boolean).map(c =>
+              `<option value="${c}" ${row.category === c ? 'selected' : ''}>${c}</option>`
+            ).join('')}
+          </select>
+        </td>
+        <td>
+          <div class="unit-toggle">
+            <button class="${row.unit === 'g'  ? 'active' : ''}" onclick="setUnit(${row.id},'g')">g</button>
+            <button class="${row.unit === 'kg' ? 'active' : ''}" onclick="setUnit(${row.id},'kg')">kg</button>
+          </div>
+        </td>
+        <td>
+          <input class="product-input" type="text" placeholder="e.g. Fancy Feast Tuna"
+            value="${escHtml(row.product)}"
+            oninput="update(${row.id},'product',this.value)" />
+        </td>
+        <td class="col-amount">
+          <input type="number" placeholder="${row.unit === 'g' ? '400' : '5'}" min="0" step="any"
+            value="${row.amount}"
+            oninput="update(${row.id},'amount',this.value)" />
+        </td>
+        <td class="col-price">
+          <input type="number" placeholder="0.00" min="0" step="any"
+            value="${row.price}"
+            oninput="update(${row.id},'price',this.value)" />
+        </td>
+        <td class="col-result">
+          <span class="result-cell ${result ? '' : 'empty'}">
+            ${result ? `${cur}${result.value} ${result.label}` : '—'}
+          </span>
+        </td>
+        <td class="col-date">
+          <input type="date" value="${row.date}"
+            onchange="update(${row.id},'date',this.value)" />
+        </td>
+        <td class="col-store">
+          <input type="text" placeholder="e.g. PetSmart"
+            value="${escHtml(row.store)}"
+            oninput="update(${row.id},'store',this.value)" />
+        </td>
+        <td class="col-stock">
+          <div class="stock-wrap">
+            <input type="number" placeholder="0" min="0" step="1"
+              value="${row.stock}"
+              oninput="update(${row.id},'stock',this.value)"
+              style="width:48px;" />
+            ${lowStock ? '<span class="low-badge">LOW</span>' : ''}
+          </div>
+        </td>
+        <td class="col-rating">
+          <div class="rating-wrap">
+            ${RATINGS.map(e => `
+              <button class="${row.rating === e ? 'selected' : ''}"
+                onclick="setRating(${row.id},'${e}')"
+                title="${e === '😻' ? 'Love' : e === '😐' ? 'OK' : 'Reject'}">${e}</button>
+            `).join('')}
+          </div>
+        </td>
+        <td class="col-notes">
+          <input type="text" placeholder="remarks…"
+            value="${escHtml(row.notes)}"
+            oninput="update(${row.id},'notes',this.value)" />
+        </td>
+        <td class="col-del">
+          <button class="btn-del" onclick="deleteRow(${row.id})" title="Remove">✕</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    renderSummary();
+  }
+
+  function update(id, field, value) {
+    const r = rows.find(r => r.id === id);
+    if (r) {
+      r[field] = value;
+      renderAll();
+    }
+  }
+
+  function renderSummary() {
+    const sumEl = document.getElementById('summary');
+    const cur   = currency();
+
+    const withResult = rows.filter(r => calcResult(r)).map(r => ({ ...r, res: calcResult(r) }));
+    const lowItems   = rows.filter(r => r.stock !== '' && parseFloat(r.stock) <= 1);
+
+    if (withResult.length < 2 && lowItems.length === 0) {
+      sumEl.style.display = 'none';
+      return;
+    }
+
+    const parts = [];
+
+    if (withResult.length >= 2) {
+      const sorted = [...withResult].sort((a, b) => parseFloat(a.res.value) - parseFloat(b.res.value));
+      const best  = sorted[0];
+      const worst = sorted[sorted.length - 1];
+      const name  = r => r.product || `Row ${rows.indexOf(rows.find(x => x.id === r.id)) + 1}`;
+      parts.push(`<span><strong>Best value:</strong> ${name(best)} — ${cur}${best.res.value} ${best.res.label}</span>`);
+      parts.push(`<span><strong>Most expensive:</strong> ${name(worst)} — ${cur}${worst.res.value} ${worst.res.label}</span>`);
+    }
+
+    if (lowItems.length > 0) {
+      const names = lowItems.map(r => r.product || 'Unnamed').join(', ');
+      parts.push(`<span>🔴 <strong>Low stock:</strong> ${names}</span>`);
+    }
+
+    sumEl.style.display = 'flex';
+    sumEl.innerHTML = parts.join('');
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function exportToExcel() {
+    const cur = currency();
+
+    const header = [
+      '#', 'Category', 'Unit', 'Product',
+      `Pack Size`, `Total Price (${cur})`, 'Price per Unit',
+      'Date Bought', 'Store', 'Stock (packs)', 'Cat Likes?', 'Notes',
+    ];
+
+    const dataRows = rows.map((row, idx) => {
+      const res       = calcResult(row);
+      const packLabel = row.amount ? `${row.amount} ${row.unit}` : '';
+      return [
+        idx + 1,
+        row.category,
+        row.unit,
+        row.product,
+        packLabel,
+        row.price ? parseFloat(row.price) : '',
+        res ? `${cur}${res.value} ${res.label}` : '',
+        row.date,
+        row.store,
+        row.stock !== '' ? parseFloat(row.stock) : '',
+        row.rating,
+        row.notes,
+      ];
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([header, ...dataRows]);
+
+    ws['!cols'] = [
+      { wch: 4  },  // #
+      { wch: 13 },  // Category
+      { wch: 6  },  // Unit
+      { wch: 26 },  // Product
+      { wch: 10 },  // Pack Size
+      { wch: 14 },  // Total Price
+      { wch: 16 },  // Price per Unit
+      { wch: 12 },  // Date
+      { wch: 14 },  // Store
+      { wch: 10 },  // Stock
+      { wch: 10 },  // Rating
+      { wch: 28 },  // Notes
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Cat Products');
+
+    const date = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `cat-tracker-${date}.xlsx`);
+  }
+
+  // Default rows
+  addRow('g');
+  addRow('g');
+  addRow('kg');
+</script>
+
+</body>
+</html>
