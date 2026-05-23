@@ -3,899 +3,1568 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cat Product Tracker</title>
+  <title>Pantry — Cat Product Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
+    :root {
+      --bg:        #E9E2D0;
+      --cream:     #F6F1E7;
+      --cream-2:   #EFE8D9;
+      --paper:     #FBF7EE;
+      --ink:       #2A2521;
+      --ink-2:     #4A413A;
+      --mute:      #8C8276;
+      --hair:      #E4DCC9;
+      --hair-2:    #D6CCB4;
+      --warn:      #C25A3A;
+      --good:      #6E8B53;
+
+      --c-macson:       #6B8AAE;
+      --c-miumiu:       #D87A6E;
+      --c-duoduo:       #D9A05A;
+      --c-llaollao:     #8AA77B;
+      --c-macson-tint:   #F1F5FA;
+      --c-miumiu-tint:   #FAEFEC;
+      --c-duoduo-tint:   #FBF3E2;
+      --c-llaollao-tint: #EEF3E9;
+      --c-macson-soft:   #E4ECF4;
+      --c-miumiu-soft:   #F6E0DC;
+      --c-duoduo-soft:   #F4E5CC;
+      --c-llaollao-soft: #E1EAD9;
+
+      --font-display: "Newsreader", Georgia, serif;
+      --font-body:    "Manrope", -apple-system, sans-serif;
+      --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+      --r-sm: 10px;
+      --r-md: 16px;
+      --r-lg: 22px;
+      --r-xl: 32px;
+      --shadow-card: 0 1px 0 rgba(42,37,33,0.04), 0 8px 22px -12px rgba(42,37,33,0.18);
+      --shadow-soft: 0 1px 0 rgba(42,37,33,0.04), 0 2px 8px -4px rgba(42,37,33,0.08);
+    }
+
+    html.dark {
+      --bg:     #1C1C1E;
+      --cream:  #2C2C2E;
+      --cream-2:#3A3A3C;
+      --paper:  #242424;
+      --ink:    #F0F0F0;
+      --ink-2:  #AEAEB2;
+      --mute:   #6C6C70;
+      --hair:   #3A3A3C;
+      --hair-2: #48484A;
+    }
+
+    html.dark input, html.dark select, html.dark textarea {
+      background: var(--cream-2);
+      color: var(--ink);
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f5f7;
-      color: #1d1d1f;
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--ink);
+      display: flex;
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ===== LEFT RAIL ===== */
+    .rail {
+      width: 86px;
+      background: var(--paper);
+      border-right: 1px solid var(--hair);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+      gap: 0;
+    }
+
+    .rail-logo {
+      width: 44px; height: 44px;
+      background: var(--ink);
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 28px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .rail-logo span {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 500;
+      font-size: 22px;
+      color: var(--cream);
+    }
+
+    .rail-nav {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      width: 100%;
+    }
+
+    .rail-item {
+      width: 60px; height: 52px;
+      border-radius: var(--r-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--mute);
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 500;
+      transition: background 0.15s, color 0.15s;
+    }
+    .rail-item .icon { font-size: 18px; line-height: 1; }
+    .rail-item:hover { background: var(--cream); color: var(--ink); }
+    .rail-item.active { background: var(--cream-2); color: var(--ink); }
+
+    .rail-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dark-toggle {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--hair);
+      background: var(--cream);
+      color: var(--ink-2);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .dark-toggle:hover { background: var(--cream-2); }
+
+    .export-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--hair);
+      background: var(--cream);
+      color: var(--ink-2);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      title: "Export to Excel";
+    }
+    .export-btn:hover { background: var(--cream-2); }
+
+    /* ===== MAIN ===== */
+    .main {
+      margin-left: 86px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       min-height: 100vh;
     }
 
-    header {
-      background: #fff;
-      border-bottom: 1px solid #e0e0e0;
-      padding: 14px 20px;
+    /* ===== TOP BAR ===== */
+    .topbar {
+      height: 56px;
+      background: var(--paper);
+      border-bottom: 1px solid var(--hair);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 12px;
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 50;
     }
 
-    header h1 { font-size: 18px; font-weight: 600; }
-    header p  { font-size: 12px; color: #888; margin-top: 2px; }
-
-    .container {
-      padding: 14px 16px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    /* ── Toolbar ── */
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .toolbar label {
-      font-size: 13px;
-      color: #555;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .toolbar select {
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      padding: 5px 8px;
-      font-size: 13px;
-      background: #fff;
-      outline: none;
-      cursor: pointer;
-    }
-
-    /* Category filter pills */
-    .filter-bar {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 10px;
-    }
-
-    .filter-pill {
-      padding: 5px 12px;
-      border-radius: 20px;
-      border: 1.5px solid #e0e0e0;
-      background: #fff;
-      font-size: 12px;
+    .topbar-brand {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 22px;
       font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-      color: #555;
-    }
-
-    .filter-pill.active {
-      border-color: transparent;
-      color: #fff;
-    }
-
-    .filter-pill[data-cat="All"].active      { background: #555; }
-    .filter-pill[data-cat="Food"].active     { background: #ff9500; }
-    .filter-pill[data-cat="Litter"].active   { background: #5856d6; }
-    .filter-pill[data-cat="Treats"].active   { background: #ff2d55; }
-    .filter-pill[data-cat="Supplements"].active { background: #34c759; }
-
-    /* ── Table ── */
-    .table-wrap {
-      background: #fff;
-      border-radius: 12px;
-      border: 1px solid #e0e0e0;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 900px;
-    }
-
-    thead tr { background: #f7f7f7; }
-
-    th {
-      padding: 9px 10px;
-      font-size: 10px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #888;
-      text-align: left;
-      border-bottom: 1px solid #e0e0e0;
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 5px 7px;
-      border-bottom: 1px solid #f0f0f0;
-      vertical-align: middle;
-    }
-
-    tr:last-child td { border-bottom: none; }
-
-    /* low stock row highlight */
-    tr.low-stock td { background: #fff8f0; }
-
-    td.row-num {
-      font-size: 11px;
-      color: #bbb;
-      text-align: center;
-      width: 28px;
-    }
-
-    /* ── Category badge ── */
-    .cat-select {
-      border: none;
-      border-radius: 5px;
-      padding: 4px 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      outline: none;
-      width: 100px;
-    }
-
-    .cat-Food        { background: #fff3e0; color: #e65100; }
-    .cat-Litter      { background: #ede7f6; color: #4527a0; }
-    .cat-Treats      { background: #fce4ec; color: #ad1457; }
-    .cat-Supplements { background: #e8f5e9; color: #2e7d32; }
-    .cat-            { background: #f5f5f5; color: #888; }
-
-    /* ── Unit toggle ── */
-    .unit-toggle {
-      display: flex;
-      background: #f0f0f0;
-      border-radius: 6px;
-      overflow: hidden;
-      width: 68px;
-      height: 30px;
-    }
-
-    .unit-toggle button {
+      color: var(--ink);
       flex: 1;
-      border: none;
-      background: transparent;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      color: #888;
-      transition: background 0.15s, color 0.15s;
-      padding: 0;
     }
 
-    .unit-toggle button.active {
-      background: #fff;
-      color: #1d1d1f;
-      border-radius: 5px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-    }
-
-    /* ── Inputs ── */
-    input[type="text"],
-    input[type="number"],
-    input[type="date"] {
-      width: 100%;
-      border: 1px solid #e0e0e0;
-      border-radius: 6px;
-      padding: 5px 7px;
-      font-size: 13px;
-      font-family: inherit;
-      background: #fff;
-      color: #1d1d1f;
-      outline: none;
-      transition: border-color 0.15s;
-      -moz-appearance: textfield;
-    }
-
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-
-    input:focus { border-color: #007aff; }
-
-    td.col-amount { width: 90px; }
-    td.col-price  { width: 90px; }
-    td.col-result { width: 130px; }
-    td.col-date   { width: 120px; }
-    td.col-store  { width: 110px; }
-    td.col-stock  { width: 70px; }
-    td.col-rating { width: 90px; }
-    td.col-cats   { width: 150px; }
-    td.col-notes  { min-width: 140px; }
-    td.col-del    { width: 36px; text-align: center; }
-
-    /* ── Cat picker ── */
-    .cat-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 3px;
-    }
-
-    .cat-pill {
-      border: 1.5px solid #e0e0e0;
-      background: #fff;
-      border-radius: 20px;
-      padding: 2px 8px;
-      font-size: 11px;
-      font-weight: 500;
-      cursor: pointer;
-      color: #888;
-      transition: all 0.12s;
-      white-space: nowrap;
-      font-family: inherit;
-    }
-
-    .cat-pill.on {
-      border-color: transparent;
-      color: #fff;
-    }
-
-    .cat-pill.on[data-cat="Macson"]   { background: #007aff; }
-    .cat-pill.on[data-cat="Miumiu"]   { background: #ff2d55; }
-    .cat-pill.on[data-cat="Duoduo"]   { background: #ff9500; }
-    .cat-pill.on[data-cat="Llaollao"] { background: #34c759; }
-
-    /* ── Result cell ── */
-    .result-cell {
-      font-size: 12px;
-      font-weight: 600;
-      color: #007aff;
-      white-space: nowrap;
-    }
-
-    .result-cell.empty { color: #ccc; font-weight: 400; }
-
-    /* ── Stock cell ── */
-    .stock-wrap {
+    .topbar-controls {
       display: flex;
       align-items: center;
-      gap: 4px;
-    }
-
-    .low-badge {
-      font-size: 9px;
-      font-weight: 700;
-      background: #ff3b30;
-      color: #fff;
-      border-radius: 4px;
-      padding: 1px 4px;
-      white-space: nowrap;
-    }
-
-    /* ── Rating picker ── */
-    .rating-wrap {
-      display: flex;
-      gap: 3px;
-    }
-
-    .rating-wrap button {
-      border: 1.5px solid #e0e0e0;
-      background: #fff;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 2px 5px;
-      line-height: 1.4;
-      transition: all 0.12s;
-      opacity: 0.45;
-    }
-
-    .rating-wrap button.selected {
-      border-color: transparent;
-      background: #f0f0f0;
-      opacity: 1;
-      transform: scale(1.15);
-    }
-
-    /* ── Delete ── */
-    .btn-del {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 15px;
-      color: #ccc;
-      padding: 4px;
-      line-height: 1;
-      transition: color 0.15s;
-    }
-
-    .btn-del:hover { color: #ff3b30; }
-
-    /* ── Bottom actions ── */
-    .actions {
-      display: flex;
       gap: 10px;
-      margin-top: 12px;
-      flex-wrap: wrap;
     }
 
-    .add-row {
-      flex: 1;
-      min-width: 130px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      background: #fff;
-      border: 1.5px dashed #d0d0d0;
-      border-radius: 10px;
-      padding: 11px 14px;
-      cursor: pointer;
-      font-size: 14px;
-      color: #007aff;
-      font-weight: 500;
-      transition: border-color 0.15s, background 0.15s;
-      font-family: inherit;
-    }
-
-    .add-row:hover { background: #f0f7ff; border-color: #007aff; }
-    .add-row span  { font-size: 18px; line-height: 1; }
-
-    .btn-export {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #34c759;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 11px 18px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-      font-family: inherit;
-    }
-
-    .btn-export:hover  { background: #28a745; }
-    .btn-export:active { transform: scale(0.97); }
-
-    /* ── Summary ── */
-    .summary {
-      margin-top: 12px;
-      background: #fff;
-      border-radius: 12px;
-      border: 1px solid #e0e0e0;
-      padding: 12px 16px;
+    .topbar select {
+      height: 34px;
+      padding: 0 10px;
+      border: 1px solid var(--hair);
+      border-radius: var(--r-sm);
+      background: var(--cream);
+      color: var(--ink);
+      font-family: var(--font-body);
       font-size: 13px;
-      color: #555;
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* ===== CONTENT AREA ===== */
+    .content {
+      padding: 28px;
+      max-width: 1000px;
+    }
+
+    /* ===== GREETING ===== */
+    .greeting {
       display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 28px;
     }
 
-    .summary strong { color: #1d1d1f; }
+    .greeting-title {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 44px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1;
+    }
 
-    .hint {
+    .greeting-date {
+      font-family: var(--font-mono);
       font-size: 11px;
-      color: #aaa;
-      margin-top: 5px;
-      padding-left: 2px;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
-    /* ── Header layout ── */
-    header {
+    /* ===== CAT TILES ===== */
+    .cat-tiles {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .cat-tile {
+      border-radius: var(--r-lg);
+      padding: 16px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, transform 0.12s;
+      border: 2px solid transparent;
+      user-select: none;
+    }
+    .cat-tile:hover { transform: translateY(-2px); }
+    .cat-tile.active { box-shadow: 0 0 0 2px var(--ink) inset; }
+
+    .cat-tile-top {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .cat-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-style: italic;
+      font-size: 16px;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .cat-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--mute);
+      background: rgba(0,0,0,0.06);
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .cat-tile-name {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--ink);
+      display: block;
+    }
+
+    .cat-tile-sub {
+      font-size: 11.5px;
+      color: var(--mute);
+      margin-top: 2px;
+    }
+
+    /* ===== FILTER PILLS ===== */
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .filter-pill {
+      height: 32px;
+      padding: 0 14px;
+      border-radius: 20px;
+      border: 1px solid var(--hair);
+      background: var(--paper);
+      color: var(--ink-2);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      white-space: nowrap;
+    }
+    .filter-pill:hover { border-color: var(--hair-2); background: var(--cream); }
+    .filter-pill.active {
+      background: var(--ink);
+      color: var(--cream);
+      border-color: var(--ink);
+    }
+
+    .filter-pill .pill-count {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      opacity: 0.65;
+    }
+
+    /* ===== PRODUCT LIST ===== */
+    .product-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .product-card {
+      background: var(--paper);
+      border: 1px solid var(--hair);
+      border-radius: var(--r-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+      box-shadow: var(--shadow-soft);
+    }
+    .product-card:hover {
+      transform: translateY(-1px);
+      border-color: var(--hair-2);
+      box-shadow: var(--shadow-card);
+    }
+
+    .cat-icon {
+      width: 56px; height: 56px;
+      border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: white;
+      flex-shrink: 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .cat-icon::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        45deg,
+        rgba(255,255,255,0.08) 0px,
+        rgba(255,255,255,0.08) 2px,
+        transparent 2px,
+        transparent 8px
+      );
+    }
+    .cat-icon span { position: relative; z-index: 1; }
+
+    .product-info { flex: 1; min-width: 0; }
+    .product-name {
+      font-weight: 600;
+      font-size: 14.5px;
+      color: var(--ink);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .product-meta {
+      font-size: 12px;
+      color: var(--mute);
+      margin-top: 2px;
+    }
+
+    .stock-pill {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--cream-2);
+      color: var(--ink-2);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .stock-pill.low {
+      background: #F7D9CE;
+      color: var(--warn);
+    }
+
+    .price-unit {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--ink-2);
+      white-space: nowrap;
+      flex-shrink: 0;
+      min-width: 100px;
+      text-align: right;
+    }
+
+    .cat-chips {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .cat-chip {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: white;
+      font-family: var(--font-mono);
+    }
+
+    .product-rating {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* ===== ADD STUB ===== */
+    .add-stub {
+      margin-top: 10px;
+      border: 2px dashed var(--hair-2);
+      border-radius: var(--r-md);
+      padding: 18px;
+      text-align: center;
+      color: var(--mute);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .add-stub:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+      background: var(--cream);
+    }
+
+    /* ===== SHOPPING VIEW ===== */
+    .shopping-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .shopping-title {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 36px;
+      color: var(--ink);
+    }
+    .shopping-sub {
+      font-size: 13px;
+      color: var(--mute);
+      margin-top: 4px;
+    }
+
+    .shopping-card {
+      background: var(--paper);
+      border: 1px solid var(--hair);
+      border-radius: var(--r-md);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .check-btn {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: 2px solid var(--hair-2);
+      background: transparent;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      color: var(--mute);
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .check-btn.checked {
+      background: var(--good);
+      border-color: var(--good);
+      color: white;
+    }
+
+    /* ===== DRAWER ===== */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(42,37,33,0.35);
+      backdrop-filter: blur(3px);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .backdrop.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 520px;
+      background: var(--paper);
+      z-index: 201;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+      box-shadow: -8px 0 40px rgba(42,37,33,0.15);
+    }
+    .drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-hero {
+      height: 110px;
+      position: relative;
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-end;
+      padding: 16px 20px;
+    }
+
+    .drawer-close {
+      position: absolute;
+      top: 14px; right: 14px;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255,255,255,0.25);
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px);
+      transition: background 0.15s;
+    }
+    .drawer-close:hover { background: rgba(255,255,255,0.4); }
+
+    .drawer-hero-label {
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
-    .header-text h1 { font-size: 18px; font-weight: 600; }
-    .header-text p  { font-size: 12px; color: #888; margin-top: 2px; }
-
-    .dark-toggle {
-      flex-shrink: 0;
-      background: none;
-      border: 1.5px solid #e0e0e0;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 17px;
-      padding: 5px 9px;
-      line-height: 1;
-      transition: border-color 0.15s, background 0.15s;
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--mute);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
     }
 
-    .dark-toggle:hover { background: #f0f0f0; }
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--hair);
+      border-radius: var(--r-sm);
+      background: var(--cream);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--ink-2);
+    }
 
-    /* ── Dark mode overrides ── */
-    html.dark body                { background: #1c1c1e; color: #f0f0f0; }
-    html.dark header              { background: #2c2c2e; border-color: #3a3a3c; }
-    html.dark .header-text p      { color: #888; }
-    html.dark .dark-toggle        { border-color: #3a3a3c; color: #f0f0f0; }
-    html.dark .dark-toggle:hover  { background: #3a3a3c; }
-    html.dark .toolbar label      { color: #aaa; }
-    html.dark .toolbar select     { background: #3a3a3c; border-color: #545458; color: #f0f0f0; }
-    html.dark .filter-pill        { background: #2c2c2e; border-color: #3a3a3c; color: #aaa; }
-    html.dark .table-wrap         { background: #2c2c2e; border-color: #3a3a3c; }
-    html.dark thead tr            { background: #3a3a3c; }
-    html.dark th                  { color: #888; border-color: #3a3a3c; }
-    html.dark td                  { border-color: #333336; }
-    html.dark tr:last-child td    { border-bottom: none; }
-    html.dark tr.low-stock td     { background: #3a2a1a; }
-    html.dark td.row-num          { color: #666; }
-    html.dark .cat-Food           { background: #3a2210; }
-    html.dark .cat-Litter         { background: #221a40; }
-    html.dark .cat-Treats         { background: #3a1020; }
-    html.dark .cat-Supplements    { background: #102a18; }
-    html.dark .cat-               { background: #3a3a3c; color: #aaa; }
-    html.dark .unit-toggle        { background: #3a3a3c; }
-    html.dark .unit-toggle button { color: #aaa; }
-    html.dark .unit-toggle button.active { background: #545458; color: #f0f0f0; box-shadow: none; }
-    html.dark input[type="text"],
-    html.dark input[type="number"],
-    html.dark input[type="date"]  { background: #3a3a3c; border-color: #545458; color: #f0f0f0; }
-    html.dark input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
-    html.dark .result-cell.empty  { color: #555; }
-    html.dark .cat-pill           { background: #3a3a3c; border-color: #545458; color: #aaa; }
-    html.dark .rating-wrap button { background: #3a3a3c; border-color: #545458; }
-    html.dark .rating-wrap button.selected { background: #545458; }
-    html.dark .add-row            { background: #2c2c2e; border-color: #545458; color: #007aff; }
-    html.dark .add-row:hover      { background: #1a2a3a; border-color: #007aff; }
-    html.dark .summary            { background: #2c2c2e; border-color: #3a3a3c; color: #aaa; }
-    html.dark .summary strong     { color: #f0f0f0; }
-    html.dark .btn-del            { color: #555; }
-    html.dark .btn-del:hover      { color: #ff453a; }
+    .input-name {
+      font-size: 18px;
+      font-weight: 600;
+      padding: 12px 14px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 72px;
+    }
+
+    /* Segmented */
+    .seg {
+      display: flex;
+      background: var(--cream-2);
+      border-radius: var(--r-sm);
+      padding: 3px;
+      gap: 3px;
+    }
+    .seg-btn {
+      flex: 1;
+      padding: 7px 10px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--mute);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      text-align: center;
+    }
+    .seg-btn.active {
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: var(--shadow-soft);
+    }
+
+    /* Price result */
+    .price-result {
+      background: var(--cream-2);
+      border-radius: var(--r-md);
+      padding: 16px 20px;
+      text-align: center;
+    }
+    .price-result-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--mute);
+      margin-bottom: 6px;
+    }
+    .price-result-value {
+      font-family: var(--font-display);
+      font-size: 36px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1;
+    }
+
+    /* Cat preference */
+    .cat-pref-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .cat-pref-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--hair);
+      background: var(--cream);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: var(--ink-2);
+    }
+    .cat-pref-btn.active {
+      border-color: currentColor;
+      font-weight: 600;
+    }
+
+    /* Rating */
+    .rating-row {
+      display: flex;
+      gap: 8px;
+    }
+    .rating-btn {
+      flex: 1;
+      padding: 8px;
+      border: 1.5px solid var(--hair);
+      border-radius: var(--r-sm);
+      background: var(--cream);
+      font-size: 20px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .rating-btn.active {
+      border-color: var(--ink-2);
+      background: var(--cream-2);
+    }
+
+    /* Drawer footer */
+    .drawer-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--hair);
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn-primary {
+      flex: 1;
+      height: 44px;
+      border-radius: var(--r-md);
+      border: none;
+      background: var(--ink);
+      color: var(--cream);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+
+    .btn-ghost {
+      height: 44px;
+      padding: 0 18px;
+      border-radius: var(--r-md);
+      border: 1.5px solid var(--hair-2);
+      background: transparent;
+      color: var(--warn);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-ghost:hover { background: #F7D9CE; border-color: var(--warn); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--mute);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
+    .empty-state-text { font-size: 15px; font-weight: 500; }
+    .empty-state-sub { font-size: 13px; margin-top: 6px; opacity: 0.7; }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 700px) {
+      .rail { display: none; }
+      .main { margin-left: 0; padding-bottom: 70px; }
+      .content { padding: 16px; }
+      .cat-tiles { grid-template-columns: repeat(2, 1fr); }
+      .drawer { width: 100%; }
+      .form-row { grid-template-columns: 1fr; }
+      .bottom-tabs {
+        display: flex !important;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 64px;
+        background: var(--paper);
+        border-top: 1px solid var(--hair);
+        z-index: 100;
+        padding: 0 8px;
+        align-items: center;
+        justify-content: space-around;
+      }
+      .greeting-title { font-size: 32px; }
+    }
+
+    .bottom-tabs { display: none; }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 16px;
+      border-radius: var(--r-md);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--mute);
+      font-family: var(--font-body);
+      font-size: 10px;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .tab-item .icon { font-size: 20px; }
+    .tab-item.active { color: var(--ink); }
+    .tab-item.add {
+      background: var(--ink);
+      color: var(--cream);
+      border-radius: 50%;
+      width: 48px; height: 48px;
+      font-size: 22px;
+      padding: 0;
+      flex-direction: row;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="header-text">
-    <h1>🐱 Cat Product Tracker</h1>
-    <p>Price, stock, preferences — all in one place</p>
+<!-- Left Rail -->
+<nav class="rail" id="rail">
+  <div class="rail-logo"><span>p</span></div>
+  <div class="rail-nav">
+    <button class="rail-item active" id="nav-pantry" onclick="switchView('pantry')">
+      <span class="icon">🗃</span>
+      <span>Pantry</span>
+    </button>
+    <button class="rail-item" id="nav-shopping" onclick="switchView('shopping')">
+      <span class="icon">🛒</span>
+      <span>Shopping</span>
+    </button>
   </div>
-  <button class="dark-toggle" id="dark-btn" onclick="toggleDark()" title="Toggle dark mode">🌙</button>
-</header>
+  <div class="rail-bottom">
+    <button class="export-btn" onclick="exportExcel()" title="Export to Excel">📊</button>
+    <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">🌙</button>
+  </div>
+</nav>
 
-<div class="container">
-
-  <div class="toolbar">
-    <label>
-      Currency
-      <select id="currency">
-        <option value="$">$ USD</option>
+<!-- Main -->
+<main class="main">
+  <!-- Top Bar -->
+  <div class="topbar">
+    <span class="topbar-brand">pantry</span>
+    <div class="topbar-controls">
+      <select id="currency-select" onchange="setCurrency(this.value)">
         <option value="HK$">HK$</option>
-        <option value="RM">RM MYR</option>
-        <option value="£">£ GBP</option>
-        <option value="€">€ EUR</option>
-        <option value="¥">¥ JPY</option>
-        <option value="S$">S$ SGD</option>
+        <option value="USD$">USD$</option>
+        <option value="¥">¥</option>
+        <option value="€">€</option>
+        <option value="£">£</option>
+        <option value="SGD$">SGD$</option>
       </select>
-    </label>
+    </div>
   </div>
 
-  <div class="filter-bar" id="filter-bar">
-    <button class="filter-pill active" data-cat="All"         onclick="setFilter('All')">All</button>
-    <button class="filter-pill"        data-cat="Food"        onclick="setFilter('Food')">🍖 Food</button>
-    <button class="filter-pill"        data-cat="Litter"      onclick="setFilter('Litter')">🪨 Litter</button>
-    <button class="filter-pill"        data-cat="Treats"      onclick="setFilter('Treats')">🎁 Treats</button>
-    <button class="filter-pill"        data-cat="Supplements" onclick="setFilter('Supplements')">💊 Supplements</button>
+  <!-- Content -->
+  <div class="content" id="main-content"></div>
+</main>
+
+<!-- Mobile Bottom Tabs -->
+<div class="bottom-tabs">
+  <button class="tab-item active" id="tab-pantry" onclick="switchView('pantry')">
+    <span class="icon">🗃</span>
+    <span>Pantry</span>
+  </button>
+  <button class="tab-item add" onclick="openDrawer(null)">+</button>
+  <button class="tab-item" id="tab-shopping" onclick="switchView('shopping')">
+    <span class="icon">🛒</span>
+    <span>Shopping</span>
+  </button>
+</div>
+
+<!-- Drawer Backdrop -->
+<div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
+
+<!-- Drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-hero" id="drawer-hero">
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    <span class="drawer-hero-label" id="drawer-hero-label">New Product</span>
   </div>
-
-  <div class="table-wrap">
-    <table id="main-table">
-      <thead>
-        <tr>
-          <th style="width:28px">#</th>
-          <th>Category</th>
-          <th style="width:76px">Unit</th>
-          <th>Product</th>
-          <th>Pack size</th>
-          <th>Total price</th>
-          <th>Price / unit</th>
-          <th>Date bought</th>
-          <th>Store</th>
-          <th>Stock</th>
-          <th>Cat likes?</th>
-          <th>For cats</th>
-          <th>Notes</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+  <div class="drawer-body" id="drawer-body"></div>
+  <div class="drawer-footer">
+    <button class="btn-primary" onclick="saveProduct()">Save</button>
+    <button class="btn-ghost" id="delete-btn" onclick="deleteProduct()" style="display:none">Delete</button>
   </div>
-
-  <p class="hint">* g → price per 100g &nbsp;|&nbsp; kg → price per kg &nbsp;|&nbsp; 🔴 LOW = ≤ 1 pack left</p>
-
-  <div class="actions">
-    <button class="add-row" onclick="addRow()">
-      <span>+</span> Add row
-    </button>
-    <button class="btn-export" onclick="exportToExcel()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Export to Excel
-    </button>
-  </div>
-
-  <div class="summary" id="summary" style="display:none"></div>
-
 </div>
 
 <script>
-  // Dark mode — persist preference
-  (function () {
-    if (localStorage.getItem('dark') === '1') {
-      document.documentElement.classList.add('dark');
-    }
-  })();
+// ===== STATE =====
+const CATS = [
+  { name: 'Macson',  color: '#6B8AAE', tint: 'var(--c-macson-tint)',  soft: 'var(--c-macson-soft)',  initial: 'M' },
+  { name: 'Miumiu',  color: '#D87A6E', tint: 'var(--c-miumiu-tint)',  soft: 'var(--c-miumiu-soft)',  initial: 'M' },
+  { name: 'Duoduo',  color: '#D9A05A', tint: 'var(--c-duoduo-tint)',  soft: 'var(--c-duoduo-soft)',  initial: 'D' },
+  { name: 'Llaollao',color: '#8AA77B', tint: 'var(--c-llaollao-tint)',soft: 'var(--c-llaollao-soft)',initial: 'L' },
+];
 
-  function toggleDark() {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('dark', isDark ? '1' : '0');
-    document.getElementById('dark-btn').textContent = isDark ? '☀️' : '🌙';
+const CATEGORIES = [
+  { name: 'Food',        icon: '🍖', color: '#C25A3A' },
+  { name: 'Litter',      icon: '🪨', color: '#8C7355' },
+  { name: 'Treats',      icon: '🎁', color: '#D9A05A' },
+  { name: 'Supplements', icon: '💊', color: '#6B8AAE' },
+];
+
+let products = [];
+let nextId = 1;
+let currency = 'HK$';
+let dark = false;
+let filterCat = 'All';
+let filterPet = 'All';
+let activeView = 'pantry';
+let drawerOpen = false;
+let editingId = null;
+let checkedIds = new Set();
+
+// ===== PERSISTENCE =====
+function save() {
+  localStorage.setItem('pantry_products', JSON.stringify(products));
+  localStorage.setItem('pantry_nextId', String(nextId));
+  localStorage.setItem('pantry_currency', currency);
+  localStorage.setItem('pantry_dark', String(dark));
+}
+
+function load() {
+  try {
+    const p = localStorage.getItem('pantry_products');
+    if (p) products = JSON.parse(p);
+  } catch(e) {}
+  nextId = parseInt(localStorage.getItem('pantry_nextId') || '1');
+  currency = localStorage.getItem('pantry_currency') || 'HK$';
+  dark = localStorage.getItem('pantry_dark') === 'true';
+
+  if (dark) {
+    document.documentElement.classList.add('dark');
+    document.getElementById('dark-toggle').textContent = '☀️';
   }
 
-  // Sync button label on load
-  window.addEventListener('DOMContentLoaded', () => {
-    if (document.documentElement.classList.contains('dark')) {
-      document.getElementById('dark-btn').textContent = '☀️';
-    }
+  const cs = document.getElementById('currency-select');
+  if (cs) cs.value = currency;
+}
+
+// ===== HELPERS =====
+function getCat(name) {
+  return CATS.find(c => c.name === name) || CATS[0];
+}
+
+function getCatByIdx(i) { return CATS[i]; }
+
+function getCatColor(name) {
+  const c = getCat(name);
+  return c ? c.color : '#8C8276';
+}
+
+function getCategoryColor(name) {
+  const c = CATEGORIES.find(x => x.name === name);
+  return c ? c.color : '#8C8276';
+}
+
+function getCategoryIcon(name) {
+  const c = CATEGORIES.find(x => x.name === name);
+  return c ? c.icon : '📦';
+}
+
+function calcPrice(product) {
+  const amt = parseFloat(product.amount);
+  const pr = parseFloat(product.price);
+  if (!amt || !pr) return '—';
+  if (product.unit === 'g') {
+    return `${currency}${(pr / amt * 100).toFixed(2)} /100g`;
+  } else {
+    return `${currency}${(pr / amt).toFixed(2)} /kg`;
+  }
+}
+
+function calcPriceRaw(amount, price, unit) {
+  const amt = parseFloat(amount);
+  const pr = parseFloat(price);
+  if (!amt || !pr) return '—';
+  if (unit === 'g') {
+    return `${currency}${(pr / amt * 100).toFixed(2)} /100g`;
+  } else {
+    return `${currency}${(pr / amt).toFixed(2)} /kg`;
+  }
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch(e) { return iso; }
+}
+
+function todayISO() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatTodayDisplay() {
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+  }).toUpperCase();
+}
+
+function filteredProducts() {
+  return products.filter(p => {
+    if (filterCat !== 'All' && p.category !== filterCat) return false;
+    if (filterPet !== 'All' && !(p.forCats || []).includes(filterPet)) return false;
+    return true;
   });
+}
 
-  let rows = [];
-  let nextId = 1;
-  let activeFilter = 'All';
+function catProductCount(catName) {
+  return products.filter(p => (p.forCats || []).includes(catName)).length;
+}
 
-  const RATINGS  = ['😻', '😐', '😾'];
-  const CATS     = ['', 'Food', 'Litter', 'Treats', 'Supplements'];
-  const CAT_NAMES = ['Macson', 'Miumiu', 'Duoduo', 'Llaollao'];
+function categoryCount(cat) {
+  if (cat === 'All') return filteredProducts().length;
+  return products.filter(p => {
+    if (p.category !== cat) return false;
+    if (filterPet !== 'All' && !(p.forCats || []).includes(filterPet)) return false;
+    return true;
+  }).length;
+}
 
-  const currency = () => document.getElementById('currency').value;
+// ===== VIEW SWITCHING =====
+function switchView(view) {
+  activeView = view;
 
-  document.getElementById('currency').addEventListener('change', renderAll);
+  document.getElementById('nav-pantry').classList.toggle('active', view === 'pantry');
+  document.getElementById('nav-shopping').classList.toggle('active', view === 'shopping');
 
-  function setFilter(cat) {
-    activeFilter = cat;
-    document.querySelectorAll('.filter-pill').forEach(p => {
-      p.classList.toggle('active', p.dataset.cat === cat);
-    });
-    renderAll();
+  const tabP = document.getElementById('tab-pantry');
+  const tabS = document.getElementById('tab-shopping');
+  if (tabP) tabP.classList.toggle('active', view === 'pantry');
+  if (tabS) tabS.classList.toggle('active', view === 'shopping');
+
+  render();
+}
+
+// ===== TOGGLE DARK =====
+function toggleDark() {
+  dark = !dark;
+  document.documentElement.classList.toggle('dark', dark);
+  document.getElementById('dark-toggle').textContent = dark ? '☀️' : '🌙';
+  save();
+}
+
+function setCurrency(val) {
+  currency = val;
+  save();
+  render();
+}
+
+// ===== RENDER =====
+function render() {
+  const el = document.getElementById('main-content');
+  if (activeView === 'pantry') {
+    el.innerHTML = renderPantry();
+  } else {
+    el.innerHTML = renderShopping();
   }
+}
 
-  function addRow(unit = 'g') {
-    rows.push({
-      id: nextId++,
-      category: '',
-      unit,
-      product: '',
-      amount: '',
-      price: '',
-      date: '',
-      store: '',
-      stock: '',
-      rating: '',
-      forCats: [],
-      notes: '',
-    });
-    renderAll();
-    setTimeout(() => {
-      const inputs = document.querySelectorAll('.product-input');
-      if (inputs.length) inputs[inputs.length - 1].focus();
-    }, 50);
-  }
+function renderPantry() {
+  const fp = filteredProducts();
+  const lowCount = products.filter(p => p.stock !== '' && p.stock !== null && p.stock !== undefined && parseFloat(p.stock) <= 1).length;
 
-  function deleteRow(id) {
-    rows = rows.filter(r => r.id !== id);
-    renderAll();
-  }
+  let html = `
+    <div class="greeting">
+      <div class="greeting-title">pantry</div>
+      <div class="greeting-date">${formatTodayDisplay()}</div>
+    </div>
 
-  function setUnit(id, unit) {
-    const r = rows.find(r => r.id === id);
-    if (r) { r.unit = unit; renderAll(); }
-  }
-
-  function toggleCat(id, catName) {
-    const r = rows.find(r => r.id === id);
-    if (!r) return;
-    const i = r.forCats.indexOf(catName);
-    if (i === -1) r.forCats.push(catName);
-    else r.forCats.splice(i, 1);
-    // Only re-render the cat-pills cell for this row
-    const visible = activeFilter === 'All' ? rows : rows.filter(row => row.category === activeFilter);
-    const idx = visible.findIndex(row => row.id === id);
-    if (idx !== -1) {
-      const trs = document.querySelectorAll('#rows tr');
-      const pillWrap = trs[idx] && trs[idx].querySelector('.cat-pills');
-      if (pillWrap) pillWrap.innerHTML = catPillsHTML(r);
-    }
-    renderSummary();
-  }
-
-  function catPillsHTML(row) {
-    return CAT_NAMES.map(n =>
-      `<button class="cat-pill${row.forCats.includes(n) ? ' on' : ''}" data-cat="${n}"
-        onclick="toggleCat(${row.id},'${n}')">${n}</button>`
-    ).join('');
-  }
-
-  function setRating(id, emoji) {
-    const r = rows.find(r => r.id === id);
-    if (r) {
-      r.rating = r.rating === emoji ? '' : emoji;
-      renderAll();
-    }
-  }
-
-  function calcResult(row) {
-    const amount = parseFloat(row.amount);
-    const price  = parseFloat(row.price);
-    if (!amount || !price || amount <= 0 || price <= 0) return null;
-    if (row.unit === 'g') {
-      return { value: (price / amount * 100).toFixed(2), label: '/ 100g' };
-    } else {
-      return { value: (price / amount).toFixed(2), label: '/ kg' };
-    }
-  }
-
-  function renderAll() {
-    const tbody  = document.getElementById('rows');
-    tbody.innerHTML = '';
-    const cur    = currency();
-
-    const visible = activeFilter === 'All'
-      ? rows
-      : rows.filter(r => r.category === activeFilter);
-
-    visible.forEach((row, idx) => {
-      const result   = calcResult(row);
-      const lowStock = row.stock !== '' && parseFloat(row.stock) <= 1;
-
-      const tr = document.createElement('tr');
-      if (lowStock) tr.classList.add('low-stock');
-
-      tr.innerHTML = `
-        <td class="row-num">${idx + 1}</td>
-        <td>
-          <select class="cat-select cat-${row.category}"
-            onchange="update(${row.id},'category',this.value);this.className='cat-select cat-'+this.value">
-            <option value="">— pick —</option>
-            ${CATS.filter(Boolean).map(c =>
-              `<option value="${c}" ${row.category === c ? 'selected' : ''}>${c}</option>`
-            ).join('')}
-          </select>
-        </td>
-        <td>
-          <div class="unit-toggle">
-            <button class="${row.unit === 'g'  ? 'active' : ''}" onclick="setUnit(${row.id},'g')">g</button>
-            <button class="${row.unit === 'kg' ? 'active' : ''}" onclick="setUnit(${row.id},'kg')">kg</button>
+    <div class="cat-tiles">
+      ${CATS.map(cat => `
+        <div class="cat-tile ${filterPet === cat.name ? 'active' : ''}"
+             style="background: ${cat.tint};"
+             onclick="togglePetFilter('${cat.name}')">
+          <div class="cat-tile-top">
+            <div class="cat-avatar" style="background: ${cat.color}">${cat.initial}</div>
+            <span class="cat-count">${catProductCount(cat.name)}</span>
           </div>
-        </td>
-        <td>
-          <input class="product-input" type="text" placeholder="e.g. Fancy Feast Tuna"
-            value="${escHtml(row.product)}"
-            oninput="update(${row.id},'product',this.value)" />
-        </td>
-        <td class="col-amount">
-          <input type="number" placeholder="${row.unit === 'g' ? '400' : '5'}" min="0" step="any"
-            value="${row.amount}"
-            oninput="update(${row.id},'amount',this.value)" />
-        </td>
-        <td class="col-price">
-          <input type="number" placeholder="0.00" min="0" step="any"
-            value="${row.price}"
-            oninput="update(${row.id},'price',this.value)" />
-        </td>
-        <td class="col-result">
-          <span class="result-cell ${result ? '' : 'empty'}">
-            ${result ? `${cur}${result.value} ${result.label}` : '—'}
-          </span>
-        </td>
-        <td class="col-date">
-          <input type="date" value="${row.date}"
-            onchange="update(${row.id},'date',this.value)" />
-        </td>
-        <td class="col-store">
-          <input type="text" placeholder="e.g. PetSmart"
-            value="${escHtml(row.store)}"
-            oninput="update(${row.id},'store',this.value)" />
-        </td>
-        <td class="col-stock">
-          <div class="stock-wrap">
-            <input type="number" placeholder="0" min="0" step="1"
-              value="${row.stock}"
-              oninput="update(${row.id},'stock',this.value)"
-              style="width:48px;" />
-            ${lowStock ? '<span class="low-badge">LOW</span>' : ''}
+          <span class="cat-tile-name">${cat.name}</span>
+          <div class="cat-tile-sub">${catProductCount(cat.name)} product${catProductCount(cat.name) !== 1 ? 's' : ''}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="filter-row">
+      ${['All', ...CATEGORIES.map(c => c.name)].map(cat => `
+        <button class="filter-pill ${filterCat === cat ? 'active' : ''}"
+                onclick="setFilterCat('${cat}')">
+          ${cat !== 'All' ? getCategoryIcon(cat) + ' ' : ''}${cat}
+          <span class="pill-count">${categoryCount(cat === 'All' ? 'All' : cat)}</span>
+        </button>
+      `).join('')}
+    </div>
+
+    <div class="product-list" id="product-list">
+  `;
+
+  if (fp.length === 0) {
+    html += `
+      <div class="empty-state">
+        <div class="empty-state-icon">🐱</div>
+        <div class="empty-state-text">No products yet</div>
+        <div class="empty-state-sub">Click "+ Add product" below to get started</div>
+      </div>
+    `;
+  } else {
+    fp.forEach(p => {
+      const stockNum = p.stock !== '' && p.stock !== null && p.stock !== undefined ? parseFloat(p.stock) : null;
+      const isLow = stockNum !== null && stockNum <= 1;
+      const stockLabel = stockNum !== null ? `${stockNum} left` : 'No stock info';
+      const priceLabel = calcPrice(p);
+      const metaParts = [];
+      if (p.amount) metaParts.push(`${p.amount}${p.unit}`);
+      if (p.store) metaParts.push(p.store);
+      if (p.date) metaParts.push(formatDate(p.date));
+      const catColor = getCategoryColor(p.category);
+
+      html += `
+        <div class="product-card" onclick="openDrawer(${p.id})">
+          <div class="cat-icon" style="background: ${catColor}">
+            <span>${getCategoryIcon(p.category)}</span>
           </div>
-        </td>
-        <td class="col-rating">
-          <div class="rating-wrap">
-            ${RATINGS.map(e => `
-              <button class="${row.rating === e ? 'selected' : ''}"
-                onclick="setRating(${row.id},'${e}')"
-                title="${e === '😻' ? 'Love' : e === '😐' ? 'OK' : 'Reject'}">${e}</button>
-            `).join('')}
+          <div class="product-info">
+            <div class="product-name">${escHtml(p.name || 'Unnamed')}</div>
+            <div class="product-meta">${metaParts.map(escHtml).join(' · ')}</div>
           </div>
-        </td>
-        <td class="col-cats">
-          <div class="cat-pills">${catPillsHTML(row)}</div>
-        </td>
-        <td class="col-notes">
-          <input type="text" placeholder="remarks…"
-            value="${escHtml(row.notes)}"
-            oninput="update(${row.id},'notes',this.value)" />
-        </td>
-        <td class="col-del">
-          <button class="btn-del" onclick="deleteRow(${row.id})" title="Remove">✕</button>
-        </td>
+          <span class="stock-pill ${isLow ? 'low' : ''}">${stockLabel}</span>
+          <span class="price-unit">${priceLabel}</span>
+          <div class="cat-chips">
+            ${(p.forCats || []).map(cn => {
+              const c = getCat(cn);
+              return `<div class="cat-chip" style="background:${c.color}" title="${escHtml(cn)}">${c.initial}</div>`;
+            }).join('')}
+          </div>
+          <span class="product-rating">${p.rating === '😻' ? '😻' : p.rating === '😐' ? '😐' : p.rating === '😾' ? '😾' : ''}</span>
+        </div>
       `;
-      tbody.appendChild(tr);
     });
-
-    renderSummary();
   }
 
-  function update(id, field, value) {
-    const r = rows.find(r => r.id === id);
-    if (!r) return;
-    r[field] = value;
+  html += `
+    </div>
+    <div class="add-stub" onclick="openDrawer(null)">+ Add product</div>
+  `;
 
-    // Unit and category changes need a full re-render (no active typing involved)
-    if (field === 'unit' || field === 'category') {
-      renderAll();
-      return;
-    }
+  return html;
+}
 
-    // All other fields: only update derived display elements so typed inputs keep focus
-    const visible = activeFilter === 'All'
-      ? rows
-      : rows.filter(row => row.category === activeFilter);
-    const idx = visible.findIndex(row => row.id === id);
+function renderShopping() {
+  const lowStock = products
+    .filter(p => p.stock !== '' && p.stock !== null && p.stock !== undefined && parseFloat(p.stock) <= 1)
+    .sort((a, b) => parseFloat(a.stock) - parseFloat(b.stock));
 
-    // Row is hidden by current filter — just refresh summary
-    if (idx === -1) { renderSummary(); return; }
+  let html = `
+    <div class="shopping-header">
+      <div>
+        <div class="shopping-title">shopping</div>
+        <div class="shopping-sub">${lowStock.length} item${lowStock.length !== 1 ? 's' : ''} running low</div>
+      </div>
+    </div>
+    <div class="product-list">
+  `;
 
-    const cur = currency();
+  if (lowStock.length === 0) {
+    html += `
+      <div class="empty-state">
+        <div class="empty-state-icon">✅</div>
+        <div class="empty-state-text">All stocked up!</div>
+        <div class="empty-state-sub">No items running low right now</div>
+      </div>
+    `;
+  } else {
+    lowStock.forEach(p => {
+      const isChecked = checkedIds.has(p.id);
+      const catColor = getCategoryColor(p.category);
+      const priceLabel = calcPrice(p);
 
-    // Refresh result cell (driven by amount + price)
-    const resultCells = document.querySelectorAll('.result-cell');
-    if (resultCells[idx]) {
-      const res = calcResult(r);
-      resultCells[idx].className = `result-cell ${res ? '' : 'empty'}`;
-      resultCells[idx].textContent = res ? `${cur}${res.value} ${res.label}` : '—';
-    }
-
-    // Refresh stock badge + row highlight
-    if (field === 'stock') {
-      const lowStock = value !== '' && parseFloat(value) <= 1;
-      const trs = document.querySelectorAll('#rows tr');
-      if (trs[idx]) {
-        trs[idx].classList.toggle('low-stock', lowStock);
-        const wrap = trs[idx].querySelector('.stock-wrap');
-        if (wrap) {
-          const badge = wrap.querySelector('.low-badge');
-          if (lowStock && !badge) {
-            const span = document.createElement('span');
-            span.className = 'low-badge';
-            span.textContent = 'LOW';
-            wrap.appendChild(span);
-          } else if (!lowStock && badge) {
-            badge.remove();
-          }
-        }
-      }
-    }
-
-    renderSummary();
-  }
-
-  function renderSummary() {
-    const sumEl = document.getElementById('summary');
-    const cur   = currency();
-    const parts = [];
-
-    // Compare within the same unit type (g vs g, kg vs kg) so numbers are meaningful
-    for (const unit of ['g', 'kg']) {
-      const group = rows.filter(r => r.unit === unit && calcResult(r));
-      if (group.length >= 2) {
-        const sorted = [...group].sort((a, b) => parseFloat(calcResult(a).value) - parseFloat(calcResult(b).value));
-        const best  = sorted[0];
-        const worst = sorted[sorted.length - 1];
-        const name  = r => r.product || `Row ${rows.indexOf(r) + 1}`;
-        const label = unit === 'g' ? '/ 100g' : '/ kg';
-        parts.push(`<span><strong>Best (${unit}):</strong> ${name(best)} — ${cur}${calcResult(best).value} ${label}</span>`);
-        parts.push(`<span><strong>Priciest (${unit}):</strong> ${name(worst)} — ${cur}${calcResult(worst).value} ${label}</span>`);
-      }
-    }
-
-    const lowItems = rows.filter(r => r.stock !== '' && parseFloat(r.stock) <= 1);
-    if (lowItems.length > 0) {
-      const names = lowItems.map(r => r.product || 'Unnamed').join(', ');
-      parts.push(`<span>🔴 <strong>Low stock:</strong> ${names}</span>`);
-    }
-
-    if (parts.length === 0) { sumEl.style.display = 'none'; return; }
-    sumEl.style.display = 'flex';
-    sumEl.innerHTML = parts.join('');
-  }
-
-  function escHtml(str) {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/"/g, '&quot;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-  }
-
-  function exportToExcel() {
-    const cur = currency();
-
-    const header = [
-      '#', 'Category', 'Unit', 'Product',
-      `Pack Size`, `Total Price (${cur})`, 'Price per Unit',
-      'Date Bought', 'Store', 'Stock (packs)', 'Cat Likes?', 'For Cats', 'Notes',
-    ];
-
-    const dataRows = rows.map((row, idx) => {
-      const res       = calcResult(row);
-      const packLabel = row.amount ? `${row.amount} ${row.unit}` : '';
-      return [
-        idx + 1,
-        row.category,
-        row.unit,
-        row.product,
-        packLabel,
-        row.price ? parseFloat(row.price) : '',
-        res ? `${cur}${res.value} ${res.label}` : '',
-        row.date,
-        row.store,
-        row.stock !== '' ? parseFloat(row.stock) : '',
-        row.rating,
-        row.forCats.join(', '),
-        row.notes,
-      ];
+      html += `
+        <div class="shopping-card">
+          <button class="check-btn ${isChecked ? 'checked' : ''}"
+                  onclick="toggleCheck(${p.id}, event)">
+            ${isChecked ? '✓' : ''}
+          </button>
+          <div class="cat-icon" style="background: ${catColor}; opacity: ${isChecked ? '0.4' : '1'}">
+            <span>${getCategoryIcon(p.category)}</span>
+          </div>
+          <div class="product-info" style="opacity: ${isChecked ? '0.4' : '1'}">
+            <div class="product-name">${escHtml(p.name || 'Unnamed')}</div>
+            <div class="product-meta">${escHtml(p.store || '')}${p.store && p.amount ? ' · ' : ''}${p.amount ? p.amount + p.unit : ''}</div>
+          </div>
+          <span class="stock-pill low" style="opacity: ${isChecked ? '0.4' : '1'}">${p.stock} left</span>
+          <span class="price-unit" style="opacity: ${isChecked ? '0.4' : '1'}">${priceLabel}</span>
+        </div>
+      `;
     });
-
-    const ws = XLSX.utils.aoa_to_sheet([header, ...dataRows]);
-
-    ws['!cols'] = [
-      { wch: 4  },  // #
-      { wch: 13 },  // Category
-      { wch: 6  },  // Unit
-      { wch: 26 },  // Product
-      { wch: 10 },  // Pack Size
-      { wch: 14 },  // Total Price
-      { wch: 16 },  // Price per Unit
-      { wch: 12 },  // Date
-      { wch: 14 },  // Store
-      { wch: 10 },  // Stock
-      { wch: 10 },  // Rating
-      { wch: 32 },  // For Cats
-      { wch: 28 },  // Notes
-    ];
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Cat Products');
-
-    const date = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, `cat-tracker-${date}.xlsx`);
   }
 
-  // Default rows
-  addRow('g');
-  addRow('g');
-  addRow('kg');
+  html += `</div>`;
+  return html;
+}
+
+function toggleCheck(id, e) {
+  e.stopPropagation();
+  if (checkedIds.has(id)) checkedIds.delete(id);
+  else checkedIds.add(id);
+  render();
+}
+
+// ===== FILTER =====
+function setFilterCat(cat) {
+  filterCat = cat;
+  render();
+}
+
+function togglePetFilter(petName) {
+  filterPet = filterPet === petName ? 'All' : petName;
+  render();
+}
+
+// ===== DRAWER =====
+function openDrawer(id) {
+  editingId = id;
+  drawerOpen = true;
+
+  const hero = document.getElementById('drawer-hero');
+  const label = document.getElementById('drawer-hero-label');
+  const deleteBtn = document.getElementById('delete-btn');
+
+  // Determine hero color
+  let heroColor = '#4A413A';
+  if (id !== null) {
+    const p = products.find(x => x.id === id);
+    if (p) {
+      heroColor = getCategoryColor(p.category);
+      label.textContent = p.category || 'Product';
+    }
+  } else {
+    label.textContent = 'New Product';
+    heroColor = '#4A413A';
+  }
+  hero.style.background = `linear-gradient(135deg, ${heroColor}dd, ${heroColor}99)`;
+
+  deleteBtn.style.display = id !== null ? 'block' : 'none';
+
+  renderDrawerForm(id);
+
+  document.getElementById('backdrop').classList.add('visible');
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDrawer() {
+  drawerOpen = false;
+  editingId = null;
+  document.getElementById('backdrop').classList.remove('visible');
+  document.getElementById('drawer').classList.remove('open');
+}
+
+function renderDrawerForm(id) {
+  const p = id !== null ? products.find(x => x.id === id) : null;
+  const def = p || {
+    name: '', category: 'Food', unit: 'g', amount: '', price: '',
+    date: todayISO(), store: '', stock: '', rating: '', forCats: [], notes: ''
+  };
+
+  const body = document.getElementById('drawer-body');
+
+  body.innerHTML = `
+    <div class="form-group">
+      <label>Product Name</label>
+      <input class="input-name" type="text" id="f-name" value="${escAttr(def.name)}" placeholder="e.g. Wellness CORE Chicken" autocomplete="off" />
+    </div>
+
+    <div class="form-group">
+      <label>Category</label>
+      <div class="seg" id="seg-cat">
+        ${CATEGORIES.map(c => `
+          <button class="seg-btn ${def.category === c.name ? 'active' : ''}"
+                  onclick="setDrawerCat('${c.name}')">${c.icon} ${c.name}</button>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Unit</label>
+      <div class="seg" id="seg-unit">
+        <button class="seg-btn ${def.unit === 'g' ? 'active' : ''}" onclick="setDrawerUnit('g')">g</button>
+        <button class="seg-btn ${def.unit === 'kg' ? 'active' : ''}" onclick="setDrawerUnit('kg')">kg</button>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Pack Size</label>
+        <input type="number" id="f-amount" value="${escAttr(String(def.amount))}" placeholder="e.g. 85" min="0" step="any" oninput="updatePriceCalc()" />
+      </div>
+      <div class="form-group">
+        <label>Total Price</label>
+        <input type="number" id="f-price" value="${escAttr(String(def.price))}" placeholder="e.g. 15.80" min="0" step="any" oninput="updatePriceCalc()" />
+      </div>
+    </div>
+
+    <div class="price-result" id="price-result">
+      <div class="price-result-label">Price per unit</div>
+      <div class="price-result-value" id="price-result-value">${calcPriceRaw(def.amount, def.price, def.unit)}</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date Bought</label>
+        <input type="date" id="f-date" value="${escAttr(def.date || '')}" />
+      </div>
+      <div class="form-group">
+        <label>Store</label>
+        <input type="text" id="f-store" value="${escAttr(def.store || '')}" placeholder="e.g. PetCity" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Stock Count</label>
+      <input type="number" id="f-stock" value="${def.stock !== null && def.stock !== undefined && def.stock !== '' ? escAttr(String(def.stock)) : ''}" placeholder="e.g. 3" min="0" step="1" />
+    </div>
+
+    <div class="form-group">
+      <label>Rating</label>
+      <div class="rating-row">
+        <button class="rating-btn ${def.rating === '😻' ? 'active' : ''}" onclick="setRating('😻')">😻</button>
+        <button class="rating-btn ${def.rating === '😐' ? 'active' : ''}" onclick="setRating('😐')">😐</button>
+        <button class="rating-btn ${def.rating === '😾' ? 'active' : ''}" onclick="setRating('😾')">😾</button>
+        <button class="rating-btn ${def.rating === '' ? 'active' : ''}" onclick="setRating('')">—</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>For Cats</label>
+      <div class="cat-pref-row">
+        ${CATS.map(cat => {
+          const isActive = (def.forCats || []).includes(cat.name);
+          return `
+            <button class="cat-pref-btn ${isActive ? 'active' : ''}"
+                    style="${isActive ? `color: ${cat.color}; border-color: ${cat.color}; background: ${cat.color}18;` : ''}"
+                    onclick="toggleForCat('${cat.name}')">
+              ${cat.name}
+            </button>
+          `;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Any notes about this product...">${escHtml(def.notes || '')}</textarea>
+    </div>
+  `;
+}
+
+// ===== DRAWER FIELD UPDATERS (no full re-render) =====
+function setDrawerCat(cat) {
+  document.querySelectorAll('#seg-cat .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim().includes(cat));
+  });
+  // Update hero color
+  const hero = document.getElementById('drawer-hero');
+  const heroColor = getCategoryColor(cat);
+  hero.style.background = `linear-gradient(135deg, ${heroColor}dd, ${heroColor}99)`;
+  document.getElementById('drawer-hero-label').textContent = cat;
+}
+
+function setDrawerUnit(unit) {
+  document.querySelectorAll('#seg-unit .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === unit);
+  });
+  updatePriceCalc();
+}
+
+function updatePriceCalc() {
+  const amount = document.getElementById('f-amount')?.value || '';
+  const price = document.getElementById('f-price')?.value || '';
+  const activeUnit = document.querySelector('#seg-unit .seg-btn.active')?.textContent.trim() || 'g';
+  const resultEl = document.getElementById('price-result-value');
+  if (resultEl) {
+    resultEl.textContent = calcPriceRaw(amount, price, activeUnit);
+  }
+}
+
+function setRating(r) {
+  document.querySelectorAll('.rating-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.trim() === (r || '—'));
+  });
+}
+
+function toggleForCat(catName) {
+  const btn = [...document.querySelectorAll('.cat-pref-btn')].find(b => b.textContent.trim() === catName);
+  if (!btn) return;
+  const isActive = btn.classList.contains('active');
+  const cat = getCat(catName);
+  if (isActive) {
+    btn.classList.remove('active');
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    btn.style.background = '';
+  } else {
+    btn.classList.add('active');
+    btn.style.color = cat.color;
+    btn.style.borderColor = cat.color;
+    btn.style.background = cat.color + '18';
+  }
+}
+
+// ===== SAVE / DELETE =====
+function saveProduct() {
+  const name = document.getElementById('f-name')?.value?.trim() || '';
+  if (!name) {
+    document.getElementById('f-name')?.focus();
+    return;
+  }
+
+  const catActive = document.querySelector('#seg-cat .seg-btn.active');
+  const category = catActive ? catActive.textContent.trim().replace(/^[^\w]*/, '').trim() : 'Food';
+  // Extract text only (strip emoji)
+  const categoryClean = CATEGORIES.find(c => catActive?.textContent.includes(c.name))?.name || 'Food';
+
+  const unitActive = document.querySelector('#seg-unit .seg-btn.active');
+  const unit = unitActive?.textContent.trim() || 'g';
+
+  const amount = document.getElementById('f-amount')?.value || '';
+  const price = document.getElementById('f-price')?.value || '';
+  const date = document.getElementById('f-date')?.value || '';
+  const store = document.getElementById('f-store')?.value?.trim() || '';
+  const stockVal = document.getElementById('f-stock')?.value;
+  const stock = stockVal !== '' && stockVal !== undefined ? parseFloat(stockVal) : '';
+  const notes = document.getElementById('f-notes')?.value?.trim() || '';
+
+  const ratingActive = document.querySelector('.rating-btn.active');
+  const ratingText = ratingActive?.textContent.trim() || '';
+  const rating = ratingText === '—' ? '' : ratingText;
+
+  const forCats = [...document.querySelectorAll('.cat-pref-btn.active')].map(b => b.textContent.trim());
+
+  if (editingId !== null) {
+    const idx = products.findIndex(p => p.id === editingId);
+    if (idx !== -1) {
+      products[idx] = { ...products[idx], name, category: categoryClean, unit, amount, price, date, store, stock, notes, rating, forCats };
+    }
+  } else {
+    products.push({ id: nextId++, name, category: categoryClean, unit, amount, price, date, store, stock, notes, rating, forCats });
+  }
+
+  save();
+  closeDrawer();
+  render();
+}
+
+function deleteProduct() {
+  if (editingId === null) return;
+  if (!confirm('Delete this product?')) return;
+  products = products.filter(p => p.id !== editingId);
+  save();
+  closeDrawer();
+  render();
+}
+
+// ===== EXPORT =====
+function exportExcel() {
+  if (typeof XLSX === 'undefined') {
+    alert('SheetJS not loaded. Check your internet connection.');
+    return;
+  }
+
+  const rows = products.map((p, i) => ({
+    '#': i + 1,
+    'Category': p.category || '',
+    'Unit': p.unit || '',
+    'Product': p.name || '',
+    'Pack Size': p.amount ? `${p.amount}${p.unit}` : '',
+    'Total Price': p.price ? `${currency}${p.price}` : '',
+    'Price/Unit': calcPrice(p),
+    'Date Bought': p.date || '',
+    'Store': p.store || '',
+    'Stock': p.stock !== '' && p.stock !== undefined ? p.stock : '',
+    'Rating': p.rating || '',
+    'For Cats': (p.forCats || []).join(', '),
+    'Notes': p.notes || '',
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Pantry');
+
+  const date = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `pantry-${date}.xlsx`);
+}
+
+// ===== ESCAPE HELPERS =====
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escAttr(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// ===== KEYBOARD =====
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && drawerOpen) closeDrawer();
+});
+
+// ===== INIT =====
+load();
+render();
 </script>
-
 </body>
 </html>
