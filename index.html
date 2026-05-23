@@ -488,30 +488,30 @@ const SEED_SHOPPING = [
   { id:'s5', name:'Churu Tuna multipack',         size:'×20',    for:['miumiu','duoduo','llaollao'],           priority:'watch',  store:'Amazon',  est:14.99, done:true  },
 ];
 const SEED_CALENDAR = [
-  { id:'c1', date:'May 22', kind:'purchase', catId:null,      title:'Tiki Cat ×4 pouches',        detail:'Pet Food Express · HK$8.80' },
-  { id:'c2', date:'May 20', kind:'purchase', catId:null,      title:'Churu Tuna multipack',        detail:'Amazon · HK$14.99' },
-  { id:'c3', date:'May 18', kind:'vet',      catId:'macson',  title:'Macson · dental check',       detail:'Dr. Yamada · 12:30pm' },
-  { id:'c4', date:'May 14', kind:'purchase', catId:null,      title:'Stella & Chewy 14oz',         detail:'Petco · HK$38.00' },
-  { id:'c5', date:'May 12', kind:'refill',   catId:null,      title:'Litter refill due',           detail:"World's Best · 14 lb" },
-  { id:'c6', date:'May 07', kind:'vet',      catId:'miumiu',  title:'Miumiu · vaccine',            detail:'Dr. Yamada · 09:00am' },
-  { id:'c7', date:'May 02', kind:'purchase', catId:null,      title:'Vetri Lysine 120g',           detail:'Chewy · HK$22.40' },
+  { id:'c1', date:'2026-05-22', kind:'purchase', catId:null,      title:'Tiki Cat ×4 pouches',        detail:'Pet Food Express · HK$8.80' },
+  { id:'c2', date:'2026-05-20', kind:'purchase', catId:null,      title:'Churu Tuna multipack',        detail:'Amazon · HK$14.99' },
+  { id:'c3', date:'2026-05-18', kind:'vet',      catId:'macson',  title:'Macson · dental check',       detail:'Dr. Yamada · 12:30pm' },
+  { id:'c4', date:'2026-05-14', kind:'purchase', catId:null,      title:'Stella & Chewy 14oz',         detail:'Petco · HK$38.00' },
+  { id:'c5', date:'2026-05-12', kind:'refill',   catId:null,      title:'Litter refill due',           detail:"World's Best · 14 lb" },
+  { id:'c6', date:'2026-05-07', kind:'vet',      catId:'miumiu',  title:'Miumiu · vaccine',            detail:'Dr. Yamada · 09:00am' },
+  { id:'c7', date:'2026-05-02', kind:'purchase', catId:null,      title:'Vetri Lysine 120g',           detail:'Chewy · HK$22.40' },
 ];
 const SEED_VET = {
   macson:   [
-    { date:'May 18', title:'Dental check',  body:'Mild tartar on canines. Switch to dental treats; recheck in 6mo.',         vet:'Dr. Yamada' },
-    { date:'Mar 04', title:'Weight notes',  body:'Down 200g from January peak — keep current portion.',                       vet:'Dr. Yamada' },
-    { date:'Feb 11', title:'Allergy flare', body:'Seasonal sneezing returned. Start Lysine 250mg daily for 4 wks.',          vet:'Dr. Yamada' },
+    { date:'2026-05-18', title:'Dental check',  body:'Mild tartar on canines. Switch to dental treats; recheck in 6mo.',     vet:'Dr. Yamada' },
+    { date:'2026-03-04', title:'Weight notes',  body:'Down 200g from January peak — keep current portion.',                  vet:'Dr. Yamada' },
+    { date:'2026-02-11', title:'Allergy flare', body:'Seasonal sneezing returned. Start Lysine 250mg daily for 4 wks.',     vet:'Dr. Yamada' },
   ],
   miumiu:   [
-    { date:'May 07', title:'Annual vaccines',body:'FVRCP + rabies updated. Next due May 2027.',                               vet:'Dr. Yamada' },
-    { date:'Jan 22', title:'Spay check',    body:'Healing fully closed. No restrictions.',                                    vet:'Dr. Yamada' },
+    { date:'2026-05-07', title:'Annual vaccines',body:'FVRCP + rabies updated. Next due May 2027.',                          vet:'Dr. Yamada' },
+    { date:'2026-01-22', title:'Spay check',    body:'Healing fully closed. No restrictions.',                               vet:'Dr. Yamada' },
   ],
   duoduo:   [
-    { date:'Apr 02', title:'Weight check',  body:'5.4 kg, slightly above ideal. Cut treats to 1/day.',                       vet:'Dr. Yamada' },
-    { date:'Nov 14', title:'Annual checkup',body:'All clear. Bloodwork unremarkable.',                                        vet:'Dr. Lin' },
+    { date:'2026-04-02', title:'Weight check',  body:'5.4 kg, slightly above ideal. Cut treats to 1/day.',                  vet:'Dr. Yamada' },
+    { date:'2025-11-14', title:'Annual checkup',body:'All clear. Bloodwork unremarkable.',                                   vet:'Dr. Lin' },
   ],
   llaollao: [
-    { date:'Mar 28', title:'Annual checkup',body:'Healthy. Slight gingivitis on lower right — monitor.',                      vet:'Dr. Lin' },
+    { date:'2026-03-28', title:'Annual checkup',body:'Healthy. Slight gingivitis on lower right — monitor.',                 vet:'Dr. Lin' },
   ],
 };
 
@@ -524,12 +524,12 @@ function loadData() {
   currency = localStorage.getItem('pantry_currency') || 'HK$';
   dark = localStorage.getItem('pantry_dark') === 'true';
   // Seed on first load
-  if (!localStorage.getItem('pantry_seeded')) {
+  if (!localStorage.getItem('pantry_seeded_v2')) {
     products  = SEED_PRODUCTS;
     shopping  = SEED_SHOPPING;
     calendar  = SEED_CALENDAR;
     vet       = SEED_VET;
-    localStorage.setItem('pantry_seeded', '1');
+    localStorage.setItem('pantry_seeded_v2', '1');
     saveData();
   }
 }
@@ -866,7 +866,6 @@ views.shop = function() {
     <h1 class="page-title">What's on the list.</h1>
     <div class="page-sub">${openCount} open · est total ${currency}${openTotal.toFixed(0)}</div>
     <div class="page-actions">
-      <button class="btn btn-ghost">Sort by store</button>
       <button class="btn btn-primary" data-open-form="shopping,new">+ Add item</button>
     </div>
   </div>
@@ -936,7 +935,7 @@ views.pantry = function() {
     <h1 class="page-title">Every box, bag &amp; pouch.</h1>
     <div class="page-sub">${filtered.length} of ${total} products</div>
     <div class="page-actions">
-      <button class="btn btn-ghost" id="export-csv-btn">Export CSV</button>
+      <button class="btn btn-ghost" id="export-csv-btn">Export Excel</button>
       <button class="btn btn-primary" data-open-form="product,new">+ Add product</button>
     </div>
   </div>
@@ -1130,7 +1129,7 @@ views.vet = function() {
         <div class="vet-note-date">${fmtDate(n.date)}</div>
         <div class="vet-note-title">${n.title}</div>
         <div class="vet-note-body">${n.body||''}</div>
-        ${n.vet?`<div class="vet-note-vet">Dr. ${n.vet}</div>`:''}
+        ${n.vet?`<div class="vet-note-vet">${n.vet}</div>`:''}
       </div>`).join('');
     return `<div class="vet-card">
       <div class="vet-card-head">
@@ -1189,7 +1188,7 @@ function openCatDrawer(catId) {
       <div class="vet-note-date">${fmtDate(n.date)}</div>
       <div class="vet-note-title">${n.title}</div>
       <div class="vet-note-body">${n.body||''}</div>
-      ${n.vet?`<div class="vet-note-vet">Dr. ${n.vet}</div>`:''}
+      ${n.vet?`<div class="vet-note-vet">${n.vet}</div>`:''}
     </div>`).join('');
 
   const el = document.getElementById('cat-drawer');
