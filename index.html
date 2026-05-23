@@ -398,6 +398,10 @@ a{text-decoration:none;color:inherit}
       <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>
       <span>Vet</span>
     </button>
+    <button class="rail-item" data-view="meds">
+      <svg viewBox="0 0 24 24"><path d="M3.5 11.5l7-7a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM9 9l6 6"/></svg>
+      <span>Meds</span>
+    </button>
     <div class="rail-bottom">
       <button class="rail-btn" id="dark-toggle" title="Toggle dark mode">🌙</button>
       <button class="rail-btn" id="export-btn" title="Export">📊</button>
@@ -416,7 +420,6 @@ a{text-decoration:none;color:inherit}
           <option value="€">€</option>
           <option value="¥">¥</option>
         </select>
-        <div id="cat-pills"></div>
       </div>
     </header>
     <div id="content"><div id="content-inner"></div></div>
@@ -439,6 +442,10 @@ a{text-decoration:none;color:inherit}
     <div class="mob-tab" data-view="vet">
       <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>
       <span>Vet</span>
+    </div>
+    <div class="mob-tab" data-view="meds">
+      <svg viewBox="0 0 24 24"><path d="M3.5 11.5l7-7a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM9 9l6 6"/></svg>
+      <span>Meds</span>
     </div>
   </div>
 </div>
@@ -466,55 +473,10 @@ let products = [];
 let shopping = [];
 let calendar = [];
 let vet = { macson:[], miumiu:[], duoduo:[], llaollao:[] };
+let meds = [];
 let currency = 'RM';
 let dark = false;
 let currentView = 'home';
-
-// ===== SEED DATA (first load only) =====
-const SEED_PRODUCTS = [
-  { id:'p1', cat:'Food',        name:'Fancy Feast Tuna',           brand:'Fancy Feast',    packAmount:'85',  packUnit:'g',  price:'1.85', perUnit:'RM2.18 /100g', store:'PetSmart',          stock:8,  rating:'love', cats:['miumiu','duoduo'],                        note:"Backbone of Mi's dinner rotation.",       tone:'#E89A6E', updatedDate:'May 18' },
-  { id:'p2', cat:'Food',        name:'Orijen Original Dry',        brand:'Orijen',         packAmount:'5.4', packUnit:'kg', price:'64.99',perUnit:'RM12.04 /kg',  store:'Chewy',             stock:1,  rating:'ok',   cats:['macson','llaollao'],                      note:'Macson eats slow; lasts ~5 weeks.',        tone:'#7B95B0', updatedDate:'Apr 30' },
-  { id:'p3', cat:'Litter',      name:"World's Best Clumping",      brand:"World's Best",   packAmount:'14',  packUnit:'kg', price:'28.50',perUnit:'RM2.04 /kg',   store:'Target',            stock:0,  rating:'love', cats:['macson','miumiu','duoduo','llaollao'],    note:'Low dust — worth the price.',             tone:'#9A8EB8', updatedDate:'May 12' },
-  { id:'p4', cat:'Treats',      name:'Churu Tuna Sticks',          brand:'Inaba',          packAmount:'14',  packUnit:'g',  price:'4.99', perUnit:'RM8.91 /100g', store:'Amazon',            stock:12, rating:'love', cats:['miumiu','duoduo','llaollao'],             note:'Universal language.',                     tone:'#D87A6E', updatedDate:'May 20' },
-  { id:'p5', cat:'Supplements', name:'Vetri Lysine',               brand:'Vetri',          packAmount:'120', packUnit:'g',  price:'22.40',perUnit:'RM18.67 /100g',store:'Chewy',             stock:2,  rating:'ok',   cats:['macson'],                                 note:"For Macson's seasonal flare-ups.",        tone:'#B7B47A', updatedDate:'May 02' },
-  { id:'p6', cat:'Food',        name:'Tiki Cat Luau Pouch',        brand:'Tiki Cat',       packAmount:'80',  packUnit:'g',  price:'2.20', perUnit:'RM2.75 /100g', store:'Pet Food Express',  stock:5,  rating:'love', cats:['llaollao'],                               note:"L's only confirmed favourite wet food.",  tone:'#8AA77B', updatedDate:'May 17' },
-  { id:'p7', cat:'Food',        name:'Stella & Chewy Freeze-Dried',brand:'Stella & Chewy', packAmount:'14',  packUnit:'kg', price:'38.00',perUnit:'RM2.71 /kg',   store:'Petco',             stock:1,  rating:'love', cats:['duoduo'],                                 note:'Duoduo dance commences when bag opens.',  tone:'#D9A05A', updatedDate:'May 14' },
-  { id:'p8', cat:'Litter',      name:'Tofu Litter (Pine)',         brand:'Pidan',          packAmount:'7',   packUnit:'kg', price:'18.00',perUnit:'RM2.57 /kg',   store:'Amazon',            stock:3,  rating:'ok',   cats:['macson','miumiu','duoduo','llaollao'],    note:'Backup when WB is out of stock.',         tone:'#C7B891', updatedDate:'May 05' },
-];
-const SEED_SHOPPING = [
-  { id:'s1', name:"World's Best Clumping Litter", size:'14 lb',  for:['macson','miumiu','duoduo','llaollao'], priority:'urgent', store:'Target',  est:28.50, done:false },
-  { id:'s2', name:'Orijen Original Dry',          size:'5.4 kg', for:['macson','llaollao'],                    priority:'soon',   store:'Chewy',   est:64.99, done:false },
-  { id:'s3', name:'Stella & Chewy Freeze-Dried',  size:'14 oz',  for:['duoduo'],                               priority:'soon',   store:'Petco',   est:38.00, done:false },
-  { id:'s4', name:'Vetri Lysine refill',          size:'120 g',  for:['macson'],                               priority:'watch',  store:'Chewy',   est:22.40, done:false },
-  { id:'s5', name:'Churu Tuna multipack',         size:'×20',    for:['miumiu','duoduo','llaollao'],           priority:'watch',  store:'Amazon',  est:14.99, done:true  },
-];
-const SEED_CALENDAR = [
-  { id:'c1', date:'2026-05-22', kind:'purchase', catId:null,      title:'Tiki Cat ×4 pouches',        detail:'Pet Food Express · RM8.80' },
-  { id:'c2', date:'2026-05-20', kind:'purchase', catId:null,      title:'Churu Tuna multipack',        detail:'Amazon · RM14.99' },
-  { id:'c3', date:'2026-05-18', kind:'vet',      catId:'macson',  title:'Macson · dental check',       detail:'Dr. Yamada · 12:30pm' },
-  { id:'c4', date:'2026-05-14', kind:'purchase', catId:null,      title:'Stella & Chewy 14oz',         detail:'Petco · RM38.00' },
-  { id:'c5', date:'2026-05-12', kind:'refill',   catId:null,      title:'Litter refill due',           detail:"World's Best · 14 lb" },
-  { id:'c6', date:'2026-05-07', kind:'vet',      catId:'miumiu',  title:'Miumiu · vaccine',            detail:'Dr. Yamada · 09:00am' },
-  { id:'c7', date:'2026-05-02', kind:'purchase', catId:null,      title:'Vetri Lysine 120g',           detail:'Chewy · RM22.40' },
-];
-const SEED_VET = {
-  macson:   [
-    { date:'2026-05-18', title:'Dental check',  body:'Mild tartar on canines. Switch to dental treats; recheck in 6mo.',     vet:'Dr. Yamada' },
-    { date:'2026-03-04', title:'Weight notes',  body:'Down 200g from January peak — keep current portion.',                  vet:'Dr. Yamada' },
-    { date:'2026-02-11', title:'Allergy flare', body:'Seasonal sneezing returned. Start Lysine 250mg daily for 4 wks.',     vet:'Dr. Yamada' },
-  ],
-  miumiu:   [
-    { date:'2026-05-07', title:'Annual vaccines',body:'FVRCP + rabies updated. Next due May 2027.',                          vet:'Dr. Yamada' },
-    { date:'2026-01-22', title:'Spay check',    body:'Healing fully closed. No restrictions.',                               vet:'Dr. Yamada' },
-  ],
-  duoduo:   [
-    { date:'2026-04-02', title:'Weight check',  body:'5.4 kg, slightly above ideal. Cut treats to 1/day.',                  vet:'Dr. Yamada' },
-    { date:'2025-11-14', title:'Annual checkup',body:'All clear. Bloodwork unremarkable.',                                   vet:'Dr. Lin' },
-  ],
-  llaollao: [
-    { date:'2026-03-28', title:'Annual checkup',body:'Healthy. Slight gingivitis on lower right — monitor.',                 vet:'Dr. Lin' },
-  ],
-};
 
 // ===== PERSISTENCE =====
 function loadData() {
@@ -522,23 +484,16 @@ function loadData() {
   try { shopping  = JSON.parse(localStorage.getItem('pantry_shopping') || '[]'); } catch(e){ shopping=[]; }
   try { calendar  = JSON.parse(localStorage.getItem('pantry_calendar') || '[]'); } catch(e){ calendar=[]; }
   try { vet       = JSON.parse(localStorage.getItem('pantry_vet') || 'null') || { macson:[], miumiu:[], duoduo:[], llaollao:[] }; } catch(e){ vet={ macson:[], miumiu:[], duoduo:[], llaollao:[] }; }
+  try { meds      = JSON.parse(localStorage.getItem('pantry_meds') || '[]'); } catch(e){ meds=[]; }
   currency = localStorage.getItem('pantry_currency') || 'RM';
   dark = localStorage.getItem('pantry_dark') === 'true';
-  // Seed on first load
-  if (!localStorage.getItem('pantry_seeded_v2')) {
-    products  = SEED_PRODUCTS;
-    shopping  = SEED_SHOPPING;
-    calendar  = SEED_CALENDAR;
-    vet       = SEED_VET;
-    localStorage.setItem('pantry_seeded_v2', '1');
-    saveData();
-  }
 }
 function saveData() {
   localStorage.setItem('pantry_products', JSON.stringify(products));
   localStorage.setItem('pantry_shopping', JSON.stringify(shopping));
   localStorage.setItem('pantry_calendar', JSON.stringify(calendar));
   localStorage.setItem('pantry_vet', JSON.stringify(vet));
+  localStorage.setItem('pantry_meds', JSON.stringify(meds));
   localStorage.setItem('pantry_currency', currency);
   localStorage.setItem('pantry_dark', String(dark));
 }
@@ -1156,6 +1111,132 @@ views.vet = function() {
   <div class="vet-grid">${cards}</div>`;
 };
 
+// ---- MEDS ----
+views.meds = function() {
+  const FREQ_LABEL = { daily:'Once daily', 'twice-daily':'Twice daily', 'every-other-day':'Every other day', weekly:'Weekly', 'as-needed':'As needed' };
+  const activeMeds = meds.filter(m => m.active);
+  const inactiveMeds = meds.filter(m => !m.active);
+  const totalActive = activeMeds.length;
+  const catsOnMeds = new Set(activeMeds.map(m => m.catId)).size;
+
+  const now = new Date();
+  const upcoming = activeMeds
+    .filter(m => m.refillDate && new Date(m.refillDate) >= now)
+    .sort((a,b) => new Date(a.refillDate) - new Date(b.refillDate));
+  const nextRefill = upcoming[0];
+  const nextRefillDays = nextRefill ? Math.ceil((new Date(nextRefill.refillDate) - now) / 86400000) : null;
+
+  const catSections = CATS.map(cat => {
+    const catActive = activeMeds.filter(m => m.catId === cat.id);
+    if (!catActive.length) return null;
+    const rows = catActive.map(m => {
+      const daysOn = m.startDate ? Math.floor((Date.now() - new Date(m.startDate)) / 86400000) : 0;
+      const lowStock = m.stock !== '' && m.stock !== undefined && m.stock !== null && parseInt(m.stock) <= 5;
+      return `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)">
+        <div style="width:40px;height:40px;border-radius:10px;background:${cat.soft};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${cat.color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.5l7-7a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM9 9l6 6"/></svg>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;margin-bottom:2px">${escHtml(m.name)}</div>
+          <div style="font-size:11px;color:var(--mute)">${m.dosage}${m.unit} · ${FREQ_LABEL[m.freq]||m.freq}${m.prescribedBy ? ' · '+escHtml(m.prescribedBy) : ''}</div>
+          ${m.note ? `<div style="font-size:11px;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px">${escHtml(m.note)}</div>` : ''}
+        </div>
+        <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          ${m.stock !== '' && m.stock !== undefined && m.stock !== null ? stockBadge(m.stock) : ''}
+          ${m.refillDate ? `<div style="font-size:10px;font-family:var(--font-mono);color:${lowStock?'var(--warn)':'var(--mute)'}">Refill ${fmtDate(m.refillDate)}</div>` : `<div style="font-size:10px;font-family:var(--font-mono);color:var(--mute)">${daysOn}d on</div>`}
+        </div>
+        <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px;flex-shrink:0" data-edit-med="${m.id}">Edit</button>
+      </div>`;
+    }).join('');
+    return `<div class="card" style="margin-bottom:12px">
+      <div class="card-h">
+        <div style="display:flex;align-items:center;gap:8px">${catAvatar(cat,'sm')}<h3>${cat.name}</h3></div>
+        <span class="badge badge-mute">${catActive.length} active</span>
+      </div>
+      ${rows}
+      <button class="add-stub" data-open-form="medicine,new_${cat.id}" style="margin-top:4px">+ Add medicine</button>
+    </div>`;
+  }).filter(Boolean).join('');
+
+  const refillRows = upcoming.slice(0,6).map(m => {
+    const cat = catMap[m.catId];
+    const days = Math.ceil((new Date(m.refillDate) - now) / 86400000);
+    const urgent = days <= 3;
+    const dotColor = urgent ? 'var(--warn)' : cat?.color || 'var(--mute)';
+    const dayLabel = days <= 0 ? 'Today' : days === 1 ? 'Tomorrow' : `In ${days}d`;
+    return `<div class="timeline-row">
+      <div class="timeline-dot" style="background:${dotColor}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="timeline-title">${escHtml(m.name)}</div>
+        <div class="timeline-sub">${cat ? cat.name+' · ' : ''}<span style="color:${urgent?'var(--warn)':'var(--mute)'}">${dayLabel}</span></div>
+      </div>
+      ${m.stock !== '' && m.stock !== undefined ? stockBadge(m.stock) : ''}
+    </div>`;
+  }).join('') || `<div style="color:var(--mute);font-size:13px;padding:12px 0">No upcoming refills.</div>`;
+
+  const inactiveRows = inactiveMeds.slice(0,5).map(m => {
+    const cat = catMap[m.catId];
+    return `<div class="timeline-row" style="opacity:0.55">
+      <div class="timeline-dot" style="background:var(--mute)"></div>
+      <div style="flex:1;min-width:0">
+        <div class="timeline-title" style="text-decoration:line-through;color:var(--ink-2)">${escHtml(m.name)}</div>
+        <div class="timeline-sub">${cat ? cat.name+' · ' : ''}${FREQ_LABEL[m.freq]||m.freq}${m.endDate ? ' · ended '+fmtDate(m.endDate) : ''}</div>
+      </div>
+      <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" data-edit-med="${m.id}">Edit</button>
+    </div>`;
+  }).join('');
+
+  const emptyState = `<div class="card" style="text-align:center;padding:48px 24px">
+    <div style="width:56px;height:56px;border-radius:16px;background:var(--cream-2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--mute)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.5l7-7a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM9 9l6 6"/></svg>
+    </div>
+    <div style="font-family:var(--font-display);font-style:italic;font-size:22px;margin-bottom:6px">No active meds</div>
+    <div style="font-size:13px;color:var(--mute);margin-bottom:20px">Log a prescription or supplement to get started.</div>
+    <button class="btn btn-primary" data-open-form="medicine,new">+ Log medicine</button>
+  </div>`;
+
+  return `
+  <div class="page-header">
+    <div class="page-kicker">Medicine</div>
+    <h1 class="page-title">Doses, refills, <em>and all that.</em></h1>
+    <div class="page-sub">${totalActive} active medication${totalActive===1?'':'s'} across ${catsOnMeds} cat${catsOnMeds===1?'':'s'}.</div>
+    <div class="page-actions">
+      <button class="btn btn-primary" data-open-form="medicine,new">+ Log medicine</button>
+    </div>
+  </div>
+  <div class="kpi-row" style="margin-bottom:24px">
+    <div class="kpi-card">
+      <div class="kpi-label">Active meds</div>
+      <div class="bignum-sm">${totalActive}</div>
+      <div class="kpi-delta">across all cats</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Cats on meds</div>
+      <div class="bignum-sm">${catsOnMeds}</div>
+      <div class="kpi-delta">of ${CATS.length} total</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Next refill</div>
+      <div class="bignum-sm" style="font-size:20px;margin-top:2px">${nextRefill ? escHtml(nextRefill.name) : '—'}</div>
+      <div class="kpi-delta">${nextRefillDays !== null ? (nextRefillDays <= 0 ? 'Today' : nextRefillDays === 1 ? 'Tomorrow' : 'In '+nextRefillDays+' days') : 'None scheduled'}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px">
+    <div>${catSections || emptyState}</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="card-h"><h3>Upcoming refills</h3><span class="badge badge-mute">${upcoming.length}</span></div>
+        ${refillRows}
+      </div>
+      ${inactiveMeds.length ? `<div class="card">
+        <div class="card-h"><h3>Completed</h3><span class="badge badge-mute">${inactiveMeds.length}</span></div>
+        ${inactiveRows}
+        ${inactiveMeds.length > 5 ? `<div style="font-size:12px;color:var(--mute);padding:8px 0 0">+${inactiveMeds.length-5} more</div>` : ''}
+      </div>` : ''}
+    </div>
+  </div>`;
+};
+
 // ===== CAT DRAWER =====
 function openCatDrawer(catId) {
   const cat = catMap[catId]; if(!cat) return;
@@ -1583,6 +1664,129 @@ function openForm(type, arg) {
     }
   }
 
+  else if (type==='medicine') {
+    const isNew = arg==='new' || arg.startsWith('new_');
+    const defaultCatId = arg.startsWith('new_') ? arg.split('_')[1] : CATS[0].id;
+    const med = isNew
+      ? { id:uid(), catId:defaultCatId, name:'', dosage:'', unit:'mg', freq:'daily', startDate:new Date().toISOString().split('T')[0], endDate:'', refillDate:'', stock:'', prescribedBy:'', note:'', active:true }
+      : meds.find(m=>m.id===arg);
+    if (!med) return;
+
+    const catSel = CATS.map(c=>`<option value="${c.id}"${c.id===med.catId?' selected':''}>${c.name}</option>`).join('');
+    const freqOpts = [['daily','Daily'],['twice-daily','2× Daily'],['every-other-day','Every 2 days'],['weekly','Weekly'],['as-needed','As needed']];
+    const freqSeg = freqOpts.map(([f,l])=>`<button class="seg-btn${med.freq===f?' active':''}" data-freq="${f}" style="font-size:11px">${l}</button>`).join('');
+    const unitSeg = ['mg','ml','tab','drop'].map(u=>`<button class="seg-btn${med.unit===u?' active':''}" data-munit="${u}">${u}</button>`).join('');
+
+    el.innerHTML = `
+      <div class="form-header">
+        <div class="form-title">${isNew?'Add medicine':'Edit medicine'}</div>
+        <button class="form-close" id="form-close">✕</button>
+      </div>
+      <div class="form-body">
+        <div class="form-group">
+          <label class="form-label">Cat</label>
+          <select class="form-input" id="mf-cat">${catSel}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Medicine name</label>
+          <input class="form-input form-input-lg" id="mf-name" value="${escHtml(med.name)}" placeholder="e.g. Lysine" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dosage</label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input class="form-input" id="mf-dosage" type="number" min="0" step="0.1" style="flex:1" value="${med.dosage||''}" placeholder="e.g. 250"/>
+            <div class="seg">${unitSeg}</div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Frequency</label>
+          <div class="seg" style="flex-wrap:wrap;gap:3px">${freqSeg}</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Start date</label>
+            <input class="form-input" id="mf-start" type="date" value="${med.startDate||''}"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End date (optional)</label>
+            <input class="form-input" id="mf-end" type="date" value="${med.endDate||''}"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Next refill date</label>
+            <input class="form-input" id="mf-refill" type="date" value="${med.refillDate||''}"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stock (doses left)</label>
+            <input class="form-input" id="mf-stock" type="number" min="0" value="${med.stock!==''&&med.stock!==undefined?med.stock:''}" placeholder="0"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prescribed by</label>
+          <input class="form-input" id="mf-vet" value="${escHtml(med.prescribedBy||'')}" placeholder="Dr. Smith"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / instructions</label>
+          <textarea class="form-input" id="mf-note" rows="3" placeholder="Dosing instructions, observations...">${escHtml(med.note||'')}</textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <div class="seg">
+            <button class="seg-btn${med.active?' active':''}" data-mactive="true">Active</button>
+            <button class="seg-btn${!med.active?' active':''}" data-mactive="false">Completed</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-footer">
+        ${!isNew ? `<button class="btn btn-warn" id="mf-delete">Delete</button>` : ''}
+        <button class="btn btn-ghost" id="form-cancel">Cancel</button>
+        <button class="btn btn-primary" id="mf-save">${isNew?'Add medicine':'Save changes'}</button>
+      </div>`;
+
+    let fState = { ...med };
+
+    el.querySelectorAll('[data-munit]').forEach(btn => btn.onclick = () => {
+      fState.unit = btn.dataset.munit;
+      el.querySelectorAll('[data-munit]').forEach(b=>b.classList.toggle('active', b.dataset.munit===fState.unit));
+    });
+    el.querySelectorAll('[data-freq]').forEach(btn => btn.onclick = () => {
+      fState.freq = btn.dataset.freq;
+      el.querySelectorAll('[data-freq]').forEach(b=>b.classList.toggle('active', b.dataset.freq===fState.freq));
+    });
+    el.querySelectorAll('[data-mactive]').forEach(btn => btn.onclick = () => {
+      fState.active = btn.dataset.mactive === 'true';
+      el.querySelectorAll('[data-mactive]').forEach(b=>b.classList.toggle('active', (b.dataset.mactive==='true')===fState.active));
+    });
+
+    el.querySelector('#mf-save').onclick = () => {
+      const name = document.getElementById('mf-name').value.trim();
+      if (!name) { document.getElementById('mf-name').focus(); return; }
+      const stockVal = document.getElementById('mf-stock').value;
+      const obj = { ...fState, catId: document.getElementById('mf-cat').value, name,
+        dosage: document.getElementById('mf-dosage').value,
+        startDate: document.getElementById('mf-start').value,
+        endDate: document.getElementById('mf-end').value,
+        refillDate: document.getElementById('mf-refill').value,
+        stock: stockVal==='' ? '' : parseInt(stockVal),
+        prescribedBy: document.getElementById('mf-vet').value.trim(),
+        note: document.getElementById('mf-note').value.trim(),
+      };
+      if (isNew) { meds.push(obj); }
+      else { const idx=meds.findIndex(m=>m.id===arg); if(idx>=0) meds[idx]=obj; }
+      saveData(); closeDrawers(); render();
+    };
+
+    if (!isNew) {
+      el.querySelector('#mf-delete').onclick = () => {
+        if (confirm(`Delete "${med.name}"?`)) {
+          meds = meds.filter(m=>m.id!==arg);
+          saveData(); closeDrawers(); render();
+        }
+      };
+    }
+  }
+
   openDrawer('form-drawer');
   document.getElementById('form-close').onclick = closeDrawers;
   document.getElementById('form-cancel').onclick = closeDrawers;
@@ -1641,6 +1845,12 @@ function bindViewEvents() {
     if (item) { item.done = !item.done; saveData(); render(); }
   });
 
+  // edit medicine
+  ci.querySelectorAll('[data-edit-med]').forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    openForm('medicine', el.dataset.editMed);
+  });
+
   // pantry filters
   ci.querySelectorAll('[data-pantry-cat]').forEach(el => el.onclick = () => {
     window._pantryCatFilter = el.dataset.pantryCat;
@@ -1689,15 +1899,9 @@ function escHtml(str) {
 
 // ===== TOPBAR SETUP =====
 function setupTopbar() {
-  // Currency selector
   const sel = document.getElementById('currency-sel');
   sel.value = currency;
   sel.onchange = () => { currency = sel.value; saveData(); render(); };
-
-  // Cat pills
-  const pillsEl = document.getElementById('cat-pills');
-  pillsEl.innerHTML = CATS.map(c=>`<div class="cat-pill" style="background:${c.color}" data-cat-drawer="${c.id}" title="${c.name}">${c.initial}</div>`).join('');
-  pillsEl.querySelectorAll('[data-cat-drawer]').forEach(el => el.onclick = () => openCatDrawer(el.dataset.catDrawer));
 }
 
 // ===== RAIL + MOBILE TABS =====
