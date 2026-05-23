@@ -1,1569 +1,1728 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pantry — Cat Product Tracker</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-  <style>
-    :root {
-      --bg:        #E9E2D0;
-      --cream:     #F6F1E7;
-      --cream-2:   #EFE8D9;
-      --paper:     #FBF7EE;
-      --ink:       #2A2521;
-      --ink-2:     #4A413A;
-      --mute:      #8C8276;
-      --hair:      #E4DCC9;
-      --hair-2:    #D6CCB4;
-      --warn:      #C25A3A;
-      --good:      #6E8B53;
-
-      --c-macson:       #6B8AAE;
-      --c-miumiu:       #D87A6E;
-      --c-duoduo:       #D9A05A;
-      --c-llaollao:     #8AA77B;
-      --c-macson-tint:   #F1F5FA;
-      --c-miumiu-tint:   #FAEFEC;
-      --c-duoduo-tint:   #FBF3E2;
-      --c-llaollao-tint: #EEF3E9;
-      --c-macson-soft:   #E4ECF4;
-      --c-miumiu-soft:   #F6E0DC;
-      --c-duoduo-soft:   #F4E5CC;
-      --c-llaollao-soft: #E1EAD9;
-
-      --font-display: "Newsreader", Georgia, serif;
-      --font-body:    "Manrope", -apple-system, sans-serif;
-      --font-mono:    "JetBrains Mono", ui-monospace, monospace;
-
-      --r-sm: 10px;
-      --r-md: 16px;
-      --r-lg: 22px;
-      --r-xl: 32px;
-      --shadow-card: 0 1px 0 rgba(42,37,33,0.04), 0 8px 22px -12px rgba(42,37,33,0.18);
-      --shadow-soft: 0 1px 0 rgba(42,37,33,0.04), 0 2px 8px -4px rgba(42,37,33,0.08);
-    }
-
-    html.dark {
-      --bg:     #1C1C1E;
-      --cream:  #2C2C2E;
-      --cream-2:#3A3A3C;
-      --paper:  #242424;
-      --ink:    #F0F0F0;
-      --ink-2:  #AEAEB2;
-      --mute:   #6C6C70;
-      --hair:   #3A3A3C;
-      --hair-2: #48484A;
-    }
-
-    html.dark input, html.dark select, html.dark textarea {
-      background: var(--cream-2);
-      color: var(--ink);
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: var(--font-body);
-      background: var(--bg);
-      color: var(--ink);
-      display: flex;
-      min-height: 100vh;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    /* ===== LEFT RAIL ===== */
-    .rail {
-      width: 86px;
-      background: var(--paper);
-      border-right: 1px solid var(--hair);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px 0;
-      position: fixed;
-      top: 0; left: 0; bottom: 0;
-      z-index: 100;
-      gap: 0;
-    }
-
-    .rail-logo {
-      width: 44px; height: 44px;
-      background: var(--ink);
-      border-radius: var(--r-md);
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 28px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .rail-logo span {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-weight: 500;
-      font-size: 22px;
-      color: var(--cream);
-    }
-
-    .rail-nav {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      flex: 1;
-      width: 100%;
-    }
-
-    .rail-item {
-      width: 60px; height: 52px;
-      border-radius: var(--r-md);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      color: var(--mute);
-      font-family: var(--font-body);
-      font-size: 10px;
-      font-weight: 500;
-      transition: background 0.15s, color 0.15s;
-    }
-    .rail-item .icon { font-size: 18px; line-height: 1; }
-    .rail-item:hover { background: var(--cream); color: var(--ink); }
-    .rail-item.active { background: var(--cream-2); color: var(--ink); }
-
-    .rail-bottom {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .dark-toggle {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 1px solid var(--hair);
-      background: var(--cream);
-      color: var(--ink-2);
-      font-size: 18px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .dark-toggle:hover { background: var(--cream-2); }
-
-    .export-btn {
-      width: 44px; height: 44px;
-      border-radius: 50%;
-      border: 1px solid var(--hair);
-      background: var(--cream);
-      color: var(--ink-2);
-      font-size: 16px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-      title: "Export to Excel";
-    }
-    .export-btn:hover { background: var(--cream-2); }
-
-    /* ===== MAIN ===== */
-    .main {
-      margin-left: 86px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-
-    /* ===== TOP BAR ===== */
-    .topbar {
-      height: 56px;
-      background: var(--paper);
-      border-bottom: 1px solid var(--hair);
-      display: flex;
-      align-items: center;
-      padding: 0 28px;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
-
-    .topbar-brand {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-size: 22px;
-      font-weight: 500;
-      color: var(--ink);
-      flex: 1;
-    }
-
-    .topbar-controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .topbar select {
-      height: 34px;
-      padding: 0 10px;
-      border: 1px solid var(--hair);
-      border-radius: var(--r-sm);
-      background: var(--cream);
-      color: var(--ink);
-      font-family: var(--font-body);
-      font-size: 13px;
-      cursor: pointer;
-      outline: none;
-    }
-
-    /* ===== CONTENT AREA ===== */
-    .content {
-      padding: 28px;
-      max-width: 1000px;
-    }
-
-    /* ===== GREETING ===== */
-    .greeting {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      margin-bottom: 28px;
-    }
-
-    .greeting-title {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-size: 44px;
-      font-weight: 500;
-      color: var(--ink);
-      line-height: 1;
-    }
-
-    .greeting-date {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--mute);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    /* ===== CAT TILES ===== */
-    .cat-tiles {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-      margin-bottom: 22px;
-    }
-
-    .cat-tile {
-      border-radius: var(--r-lg);
-      padding: 16px;
-      cursor: pointer;
-      transition: box-shadow 0.15s, transform 0.12s;
-      border: 2px solid transparent;
-      user-select: none;
-    }
-    .cat-tile:hover { transform: translateY(-2px); }
-    .cat-tile.active { box-shadow: 0 0 0 2px var(--ink) inset; }
-
-    .cat-tile-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
-    }
-
-    .cat-avatar {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--font-display);
-      font-weight: 600;
-      font-style: italic;
-      font-size: 16px;
-      color: white;
-      flex-shrink: 0;
-    }
-
-    .cat-count {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--mute);
-      background: rgba(0,0,0,0.06);
-      padding: 2px 8px;
-      border-radius: 20px;
-    }
-
-    .cat-tile-name {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-size: 22px;
-      font-weight: 500;
-      color: var(--ink);
-      display: block;
-    }
-
-    .cat-tile-sub {
-      font-size: 11.5px;
-      color: var(--mute);
-      margin-top: 2px;
-    }
-
-    /* ===== FILTER PILLS ===== */
-    .filter-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-
-    .filter-pill {
-      height: 32px;
-      padding: 0 14px;
-      border-radius: 20px;
-      border: 1px solid var(--hair);
-      background: var(--paper);
-      color: var(--ink-2);
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: background 0.12s, color 0.12s, border-color 0.12s;
-      white-space: nowrap;
-    }
-    .filter-pill:hover { border-color: var(--hair-2); background: var(--cream); }
-    .filter-pill.active {
-      background: var(--ink);
-      color: var(--cream);
-      border-color: var(--ink);
-    }
-
-    .filter-pill .pill-count {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      opacity: 0.65;
-    }
-
-    /* ===== PRODUCT LIST ===== */
-    .product-list {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .product-card {
-      background: var(--paper);
-      border: 1px solid var(--hair);
-      border-radius: var(--r-md);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      cursor: pointer;
-      transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
-      box-shadow: var(--shadow-soft);
-    }
-    .product-card:hover {
-      transform: translateY(-1px);
-      border-color: var(--hair-2);
-      box-shadow: var(--shadow-card);
-    }
-
-    .cat-icon {
-      width: 56px; height: 56px;
-      border-radius: var(--r-sm);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      font-weight: 700;
-      font-family: var(--font-mono);
-      color: white;
-      flex-shrink: 0;
-      position: relative;
-      overflow: hidden;
-    }
-    .cat-icon::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: repeating-linear-gradient(
-        45deg,
-        rgba(255,255,255,0.08) 0px,
-        rgba(255,255,255,0.08) 2px,
-        transparent 2px,
-        transparent 8px
-      );
-    }
-    .cat-icon span { position: relative; z-index: 1; }
-
-    .product-info { flex: 1; min-width: 0; }
-    .product-name {
-      font-weight: 600;
-      font-size: 14.5px;
-      color: var(--ink);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .product-meta {
-      font-size: 12px;
-      color: var(--mute);
-      margin-top: 2px;
-    }
-
-    .stock-pill {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      padding: 3px 10px;
-      border-radius: 20px;
-      background: var(--cream-2);
-      color: var(--ink-2);
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .stock-pill.low {
-      background: #F7D9CE;
-      color: var(--warn);
-    }
-
-    .price-unit {
-      font-family: var(--font-mono);
-      font-size: 12.5px;
-      color: var(--ink-2);
-      white-space: nowrap;
-      flex-shrink: 0;
-      min-width: 100px;
-      text-align: right;
-    }
-
-    .cat-chips {
-      display: flex;
-      gap: 4px;
-      flex-shrink: 0;
-    }
-
-    .cat-chip {
-      width: 22px; height: 22px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 10px;
-      font-weight: 700;
-      color: white;
-      font-family: var(--font-mono);
-    }
-
-    .product-rating {
-      font-size: 16px;
-      flex-shrink: 0;
-    }
-
-    /* ===== ADD STUB ===== */
-    .add-stub {
-      margin-top: 10px;
-      border: 2px dashed var(--hair-2);
-      border-radius: var(--r-md);
-      padding: 18px;
-      text-align: center;
-      color: var(--mute);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s, background 0.15s;
-    }
-    .add-stub:hover {
-      border-color: var(--ink);
-      color: var(--ink);
-      background: var(--cream);
-    }
-
-    /* ===== SHOPPING VIEW ===== */
-    .shopping-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    .shopping-title {
-      font-family: var(--font-display);
-      font-style: italic;
-      font-size: 36px;
-      color: var(--ink);
-    }
-    .shopping-sub {
-      font-size: 13px;
-      color: var(--mute);
-      margin-top: 4px;
-    }
-
-    .shopping-card {
-      background: var(--paper);
-      border: 1px solid var(--hair);
-      border-radius: var(--r-md);
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: var(--shadow-soft);
-    }
-
-    .check-btn {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      border: 2px solid var(--hair-2);
-      background: transparent;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
-      color: var(--mute);
-      flex-shrink: 0;
-      transition: all 0.15s;
-    }
-    .check-btn.checked {
-      background: var(--good);
-      border-color: var(--good);
-      color: white;
-    }
-
-    /* ===== DRAWER ===== */
-    .backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(42,37,33,0.35);
-      backdrop-filter: blur(3px);
-      z-index: 200;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s;
-    }
-    .backdrop.visible {
-      opacity: 1;
-      pointer-events: all;
-    }
-
-    .drawer {
-      position: fixed;
-      top: 0; right: 0; bottom: 0;
-      width: 520px;
-      background: var(--paper);
-      z-index: 201;
-      display: flex;
-      flex-direction: column;
-      transform: translateX(100%);
-      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
-      box-shadow: -8px 0 40px rgba(42,37,33,0.15);
-    }
-    .drawer.open {
-      transform: translateX(0);
-    }
-
-    .drawer-hero {
-      height: 110px;
-      position: relative;
-      flex-shrink: 0;
-      display: flex;
-      align-items: flex-end;
-      padding: 16px 20px;
-    }
-
-    .drawer-close {
-      position: absolute;
-      top: 14px; right: 14px;
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255,255,255,0.25);
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      backdrop-filter: blur(4px);
-      transition: background 0.15s;
-    }
-    .drawer-close:hover { background: rgba(255,255,255,0.4); }
-
-    .drawer-hero-label {
-      font-family: var(--font-body);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.75);
-    }
-
-    .drawer-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 22px 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-    }
-
-    label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--mute);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    input[type="text"],
-    input[type="number"],
-    input[type="date"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid var(--hair);
-      border-radius: var(--r-sm);
-      background: var(--cream);
-      color: var(--ink);
-      font-family: var(--font-body);
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    input:focus, textarea:focus, select:focus {
-      border-color: var(--ink-2);
-    }
-
-    .input-name {
-      font-size: 18px;
-      font-weight: 600;
-      padding: 12px 14px;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 72px;
-    }
-
-    /* Segmented */
-    .seg {
-      display: flex;
-      background: var(--cream-2);
-      border-radius: var(--r-sm);
-      padding: 3px;
-      gap: 3px;
-    }
-    .seg-btn {
-      flex: 1;
-      padding: 7px 10px;
-      border: none;
-      border-radius: 7px;
-      background: transparent;
-      color: var(--mute);
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-      text-align: center;
-    }
-    .seg-btn.active {
-      background: var(--paper);
-      color: var(--ink);
-      box-shadow: var(--shadow-soft);
-    }
-
-    /* Price result */
-    .price-result {
-      background: var(--cream-2);
-      border-radius: var(--r-md);
-      padding: 16px 20px;
-      text-align: center;
-    }
-    .price-result-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--mute);
-      margin-bottom: 6px;
-    }
-    .price-result-value {
-      font-family: var(--font-display);
-      font-size: 36px;
-      font-weight: 500;
-      color: var(--ink);
-      line-height: 1;
-    }
-
-    /* Cat preference */
-    .cat-pref-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .cat-pref-btn {
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1.5px solid var(--hair);
-      background: var(--cream);
-      font-family: var(--font-body);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-      color: var(--ink-2);
-    }
-    .cat-pref-btn.active {
-      border-color: currentColor;
-      font-weight: 600;
-    }
-
-    /* Rating */
-    .rating-row {
-      display: flex;
-      gap: 8px;
-    }
-    .rating-btn {
-      flex: 1;
-      padding: 8px;
-      border: 1.5px solid var(--hair);
-      border-radius: var(--r-sm);
-      background: var(--cream);
-      font-size: 20px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s;
-    }
-    .rating-btn.active {
-      border-color: var(--ink-2);
-      background: var(--cream-2);
-    }
-
-    /* Drawer footer */
-    .drawer-footer {
-      padding: 16px 24px;
-      border-top: 1px solid var(--hair);
-      display: flex;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
-    .btn-primary {
-      flex: 1;
-      height: 44px;
-      border-radius: var(--r-md);
-      border: none;
-      background: var(--ink);
-      color: var(--cream);
-      font-family: var(--font-body);
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
-    .btn-primary:hover { opacity: 0.85; }
-
-    .btn-ghost {
-      height: 44px;
-      padding: 0 18px;
-      border-radius: var(--r-md);
-      border: 1.5px solid var(--hair-2);
-      background: transparent;
-      color: var(--warn);
-      font-family: var(--font-body);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-ghost:hover { background: #F7D9CE; border-color: var(--warn); }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--mute);
-    }
-    .empty-state-icon { font-size: 48px; margin-bottom: 16px; }
-    .empty-state-text { font-size: 15px; font-weight: 500; }
-    .empty-state-sub { font-size: 13px; margin-top: 6px; opacity: 0.7; }
-
-    /* ===== MOBILE ===== */
-    @media (max-width: 700px) {
-      .rail { display: none; }
-      .main { margin-left: 0; padding-bottom: 70px; }
-      .content { padding: 16px; }
-      .cat-tiles { grid-template-columns: repeat(2, 1fr); }
-      .drawer { width: 100%; }
-      .form-row { grid-template-columns: 1fr; }
-      .bottom-tabs {
-        display: flex !important;
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
-        height: 64px;
-        background: var(--paper);
-        border-top: 1px solid var(--hair);
-        z-index: 100;
-        padding: 0 8px;
-        align-items: center;
-        justify-content: space-around;
-      }
-      .greeting-title { font-size: 32px; }
-    }
-
-    .bottom-tabs { display: none; }
-
-    .tab-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3px;
-      padding: 8px 16px;
-      border-radius: var(--r-md);
-      cursor: pointer;
-      border: none;
-      background: transparent;
-      color: var(--mute);
-      font-family: var(--font-body);
-      font-size: 10px;
-      font-weight: 500;
-      transition: color 0.15s;
-    }
-    .tab-item .icon { font-size: 20px; }
-    .tab-item.active { color: var(--ink); }
-    .tab-item.add {
-      background: var(--ink);
-      color: var(--cream);
-      border-radius: 50%;
-      width: 48px; height: 48px;
-      font-size: 22px;
-      padding: 0;
-      flex-direction: row;
-      justify-content: center;
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pantry — Cat Product Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg:#E9E2D0; --cream:#F6F1E7; --cream-2:#EFE8D9; --paper:#FBF7EE;
+  --ink:#2A2521; --ink-2:#4A413A; --mute:#8C8276; --hair:#E4DCC9; --hair-2:#D6CCB4;
+  --warn:#C25A3A; --good:#6E8B53;
+  --font-display:"Newsreader",Georgia,serif;
+  --font-body:"Manrope",-apple-system,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+  --r-sm:10px; --r-md:16px; --r-lg:22px; --r-xl:32px;
+  --shadow-card:0 1px 0 rgba(42,37,33,0.04),0 8px 22px -12px rgba(42,37,33,0.18);
+  --shadow-soft:0 1px 0 rgba(42,37,33,0.04),0 2px 8px -4px rgba(42,37,33,0.08);
+}
+html.dark {
+  --bg:#1C1C1E; --cream:#2C2C2E; --cream-2:#3A3A3C; --paper:#242424;
+  --ink:#F0F0F0; --ink-2:#AEAEB2; --mute:#6C6C70; --hair:#3A3A3C; --hair-2:#48484A;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:var(--font-body);font-size:14px;background:var(--bg);color:var(--ink);transition:background 0.2s,color 0.2s}
+button{font-family:var(--font-body);cursor:pointer;border:none;outline:none}
+input,select,textarea{font-family:var(--font-body);outline:none}
+a{text-decoration:none;color:inherit}
+
+/* ===== LAYOUT ===== */
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* Rail */
+#rail{
+  width:86px;min-width:86px;background:var(--paper);
+  border-right:1px solid var(--hair);display:flex;flex-direction:column;
+  align-items:center;padding:16px 0 12px;gap:4px;z-index:10;
+}
+.rail-logo{
+  width:42px;height:42px;background:var(--ink);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:600;
+  color:var(--paper);margin-bottom:12px;flex-shrink:0;
+}
+.rail-item{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  width:64px;padding:8px 4px;border-radius:var(--r-sm);cursor:pointer;
+  color:var(--mute);transition:all 0.15s;background:transparent;border:none;
+}
+.rail-item:hover{background:var(--cream);color:var(--ink-2)}
+.rail-item.active{background:var(--cream-2);color:var(--ink)}
+.rail-item svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.rail-item span{font-size:10px;font-weight:600;letter-spacing:0.02em;text-transform:uppercase}
+.rail-bottom{margin-top:auto;display:flex;flex-direction:column;align-items:center;gap:6px;padding-bottom:4px}
+.rail-btn{
+  width:36px;height:36px;border-radius:50%;background:transparent;border:1px solid var(--hair);
+  display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;
+  transition:all 0.15s;color:var(--mute);
+}
+.rail-btn:hover{background:var(--cream-2);color:var(--ink)}
+
+/* Main */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#topbar{
+  height:56px;min-height:56px;background:var(--paper);border-bottom:1px solid var(--hair);
+  display:flex;align-items:center;padding:0 28px;gap:12px;position:sticky;top:0;z-index:9;
+}
+.topbar-logo{font-family:var(--font-display);font-style:italic;font-size:22px;color:var(--ink-2);flex:1}
+.topbar-right{display:flex;align-items:center;gap:8px}
+#currency-sel{
+  background:var(--cream);border:1px solid var(--hair);color:var(--ink);
+  padding:5px 10px;border-radius:var(--r-sm);font-size:13px;cursor:pointer;
+}
+.cat-pill{
+  width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-style:italic;font-size:13px;font-weight:600;
+  color:#fff;cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;
+  border:2px solid transparent;
+}
+.cat-pill:hover{transform:scale(1.1);box-shadow:var(--shadow-card)}
+
+#content{flex:1;overflow-y:auto;padding:28px 32px 60px}
+#content-inner{max-width:1100px;margin:0 auto}
+
+/* ===== CARDS ===== */
+.card{background:var(--paper);border-radius:var(--r-lg);border:1px solid var(--hair);padding:20px;box-shadow:var(--shadow-soft)}
+.card-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-h h3{font-size:13px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-2)}
+
+/* ===== PAGE HEADER ===== */
+.page-header{margin-bottom:28px}
+.page-kicker{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--mute);margin-bottom:6px;font-family:var(--font-mono)}
+.page-title{font-family:var(--font-display);font-size:32px;font-weight:500;line-height:1.15;color:var(--ink);margin-bottom:8px}
+.page-title em{font-style:italic}
+.page-sub{font-size:13px;color:var(--mute);line-height:1.5}
+.page-actions{display:flex;align-items:center;gap:8px;margin-top:16px}
+
+/* ===== BUTTONS ===== */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:600;transition:all 0.15s;cursor:pointer;border:none}
+.btn-primary{background:var(--ink);color:var(--paper)}
+.btn-primary:hover{background:var(--ink-2)}
+.btn-ghost{background:transparent;border:1px solid var(--hair);color:var(--ink-2)}
+.btn-ghost:hover{background:var(--cream-2)}
+.btn-warn{background:transparent;border:1px solid var(--hair);color:var(--warn)}
+.btn-warn:hover{background:#FDF0EC}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;font-family:var(--font-mono)}
+.badge-ink{background:var(--ink);color:var(--paper)}
+.badge-warn{background:#F2D0C3;color:var(--warn)}
+.badge-good{background:#D8E9CC;color:#4A6E35}
+.badge-mute{background:var(--cream-2);color:var(--mute)}
+
+/* ===== CAT TILES ===== */
+.cat-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.cat-tile{
+  border-radius:var(--r-lg);padding:16px;border:1px solid transparent;
+  cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;
+}
+.cat-tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-card)}
+.cat-tile-row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cat-av{
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-style:italic;font-weight:600;color:#fff;flex-shrink:0;
+}
+.cat-av.sm{width:28px;height:28px;font-size:12px}
+.cat-av.md{width:38px;height:38px;font-size:16px}
+.cat-av.lg{width:52px;height:52px;font-size:22px}
+.cat-av.xl{width:72px;height:72px;font-size:30px}
+.cat-tile-name{font-family:var(--font-display);font-style:italic;font-size:22px;font-weight:500}
+.cat-tile-sub{font-size:12px;color:var(--mute);margin-top:2px}
+.cat-tile-swatches{display:flex;align-items:center;gap:4px;margin-top:10px}
+.swatch{width:20px;height:20px;border-radius:6px}
+.swatch-count{font-size:11px;font-family:var(--font-mono);color:var(--mute);margin-left:2px}
+
+/* ===== DASHBOARD GRID ===== */
+.dash-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}
+.dash-grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+.span2{grid-row:span 2}
+
+/* ===== SHOP ITEMS ===== */
+.shop-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--hair)}
+.shop-item:last-child{border-bottom:none}
+.shop-cb{
+  width:22px;height:22px;border-radius:50%;border:2px solid var(--hair-2);
+  flex-shrink:0;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;
+}
+.shop-cb:hover{border-color:var(--ink-2)}
+.shop-cb.checked{background:var(--ink);border-color:var(--ink)}
+.shop-cb.checked::after{content:'✓';color:#fff;font-size:11px;font-weight:700}
+.shop-item.done .shop-name{text-decoration:line-through;color:var(--mute)}
+.shop-name{font-size:13px;font-weight:600;flex:1}
+.shop-meta{font-size:11px;color:var(--mute);display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}
+.shop-price{font-family:var(--font-mono);font-size:12px;color:var(--ink-2);margin-left:auto;white-space:nowrap}
+.prio-badge{padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase}
+.prio-urgent{background:#F2D0C3;color:var(--warn)}
+.prio-soon{background:#F5E2BC;color:#95711E}
+.prio-watch{background:var(--cream-2);color:var(--mute)}
+
+/* cat pip */
+.cat-pip{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-style:italic;font-size:8px;font-weight:700;color:#fff}
+
+/* ===== STOCK BADGE ===== */
+.stock-badge{font-size:11px;font-family:var(--font-mono);padding:2px 6px;border-radius:4px;background:var(--cream-2);color:var(--ink-2)}
+.stock-badge.low{background:#F2D0C3;color:var(--warn)}
+
+/* ===== BIG NUMBER ===== */
+.bignum{font-family:var(--font-display);font-size:52px;font-weight:400;line-height:1;color:var(--ink)}
+.bignum-sm{font-family:var(--font-display);font-size:34px;font-weight:400;line-height:1;color:var(--ink)}
+.kpi-label{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--mute);font-family:var(--font-mono);margin-bottom:6px}
+.kpi-delta{font-size:12px;color:var(--mute);margin-top:4px}
+
+/* ===== PRODUCT CARD ===== */
+.product-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.product-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.product-card{border-radius:var(--r-md);border:1px solid var(--hair);background:var(--paper);overflow:hidden;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s}
+.product-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-card)}
+.ph{
+  height:90px;border-radius:10px 10px 0 0;
+  background:repeating-linear-gradient(135deg,rgba(0,0,0,0.06) 0 6px,transparent 6px 14px),var(--tone,#D9CFB6);
+  display:flex;align-items:flex-end;padding:6px 8px;
+  font-family:var(--font-mono);font-size:10px;color:rgba(42,37,33,0.5);text-transform:uppercase;
+}
+.product-card-body{padding:10px}
+.product-card-name{font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.product-card-sub{font-size:11px;color:var(--mute)}
+.product-card-pips{display:flex;gap:3px;margin-top:6px}
+
+/* ===== CALENDAR ===== */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-header-cell{font-family:var(--font-mono);font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--mute);text-align:center;padding:8px 0}
+.cal-cell{min-height:72px;padding:6px;border-radius:8px;position:relative;cursor:pointer;transition:background 0.15s}
+.cal-cell:hover{background:var(--cream-2)}
+.cal-cell.dim{opacity:0.35}
+.cal-num{font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--ink-2);width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.cal-cell.today .cal-num{background:var(--ink);color:var(--paper)}
+.cal-ev{font-size:10px;font-weight:600;padding:2px 5px;border-radius:4px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ===== TIMELINE ===== */
+.timeline-row{display:flex;gap:12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--hair)}
+.timeline-row:last-child{border-bottom:none}
+.timeline-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.timeline-date{font-family:var(--font-mono);font-size:11px;color:var(--mute);white-space:nowrap}
+.timeline-title{font-size:13px;font-weight:600}
+.timeline-sub{font-size:11px;color:var(--mute)}
+
+/* ===== BAR CHART ===== */
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:220px;padding:0 0 8px}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.bar-fill{width:100%;border-radius:6px 6px 0 0;min-height:4px;transition:height 0.3s}
+.bar-label{font-family:var(--font-mono);font-size:10px;color:var(--mute);text-align:center}
+.bar-val{font-family:var(--font-mono);font-size:10px;color:var(--ink-2)}
+
+/* progress bar */
+.prog-bar{height:6px;border-radius:3px;background:var(--hair);overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:3px}
+
+/* ===== SEGMENTED CONTROL ===== */
+.seg{display:flex;background:var(--cream-2);border-radius:var(--r-sm);padding:3px;gap:2px}
+.seg-btn{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;background:transparent;border:none;color:var(--mute);cursor:pointer;transition:all 0.15s}
+.seg-btn.active{background:var(--paper);color:var(--ink);box-shadow:var(--shadow-soft)}
+
+/* ===== FILTER ROW ===== */
+.filter-row{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.filt-cat{
+  padding:5px 11px;border-radius:20px;font-size:12px;font-weight:600;
+  background:var(--cream-2);color:var(--mute);border:none;cursor:pointer;transition:all 0.15s;
+}
+.filt-cat.active{color:#fff}
+.filt-label{font-size:12px;color:var(--mute);font-weight:600;margin-left:6px}
+
+/* ===== ADD STUB ===== */
+.add-stub{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
+  border:1.5px dashed var(--hair-2);border-radius:var(--r-sm);
+  color:var(--mute);font-size:13px;font-weight:600;cursor:pointer;
+  background:transparent;width:100%;transition:all 0.15s;margin-top:10px;
+}
+.add-stub:hover{border-color:var(--ink-2);color:var(--ink-2);background:var(--cream)}
+
+/* ===== DRAWER ===== */
+#overlay{
+  position:fixed;inset:0;background:rgba(42,37,33,0.35);backdrop-filter:blur(4px);
+  z-index:100;opacity:0;pointer-events:none;transition:opacity 0.25s;
+}
+#overlay.open{opacity:1;pointer-events:all}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:520px;max-width:100vw;
+  background:var(--paper);z-index:101;
+  transform:translateX(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.drawer.open{transform:translateX(0)}
+.drawer-close{
+  position:absolute;top:16px;right:16px;z-index:10;
+  width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.25);
+  border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:16px;color:#fff;transition:background 0.15s;
+}
+.drawer-close:hover{background:rgba(255,255,255,0.4)}
+.drawer-hero{
+  height:220px;min-height:220px;padding:24px;display:flex;flex-direction:column;
+  justify-content:flex-end;position:relative;
+}
+.vibe-tag{
+  display:inline-block;background:rgba(255,255,255,0.2);color:#fff;
+  padding:4px 10px;border-radius:20px;font-family:var(--font-display);font-style:italic;
+  font-size:12px;margin-bottom:8px;width:fit-content;
+}
+.drawer-name{font-family:var(--font-display);font-style:italic;font-size:64px;font-weight:400;color:#fff;line-height:1}
+.drawer-breed{font-size:14.5px;color:rgba(255,255,255,0.8);margin-top:4px}
+.drawer-stats{display:flex;gap:20px;margin-top:12px}
+.drawer-stat{display:flex;flex-direction:column;gap:2px}
+.drawer-stat-label{font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.6);font-family:var(--font-mono)}
+.drawer-stat-val{font-size:14px;font-weight:600;color:#fff}
+.drawer-body{flex:1;overflow-y:auto;padding:24px}
+.drawer-section{margin-bottom:24px}
+.drawer-section-title{font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--mute);font-family:var(--font-mono);margin-bottom:12px}
+.drawer-prod{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--hair)}
+.drawer-prod:last-child{border-bottom:none}
+.drawer-prod-thumb{width:38px;height:38px;border-radius:8px;flex-shrink:0}
+.drawer-prod-name{font-size:13px;font-weight:600}
+.drawer-prod-sub{font-size:11px;color:var(--mute)}
+
+/* ===== FORM DRAWER ===== */
+.form-header{padding:20px 24px;border-bottom:1px solid var(--hair);display:flex;align-items:center;justify-content:space-between}
+.form-title{font-family:var(--font-display);font-size:22px;font-weight:500;font-style:italic}
+.form-close{width:32px;height:32px;border-radius:50%;background:var(--cream-2);border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--ink-2)}
+.form-body{flex:1;overflow-y:auto;padding:24px}
+.form-footer{padding:16px 24px;border-top:1px solid var(--hair);display:flex;gap:8px;justify-content:flex-end}
+.form-group{margin-bottom:18px}
+.form-label{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--mute);font-family:var(--font-mono);margin-bottom:6px;display:block}
+.form-input{
+  width:100%;padding:10px 12px;border-radius:var(--r-sm);border:1.5px solid var(--hair);
+  background:var(--cream);color:var(--ink);font-size:14px;transition:border-color 0.15s;
+}
+.form-input:focus{border-color:var(--ink-2)}
+.form-input-lg{font-family:var(--font-display);font-size:22px;font-style:italic;padding:12px 14px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.per-unit-display{font-family:var(--font-display);font-style:italic;font-size:28px;color:var(--ink-2);margin-top:6px}
+.rating-btns{display:flex;gap:8px}
+.rating-btn{padding:8px 14px;border-radius:var(--r-sm);border:1.5px solid var(--hair);background:var(--cream);font-size:18px;cursor:pointer;transition:all 0.15s}
+.rating-btn.active{border-color:var(--ink);background:var(--ink-2);box-shadow:var(--shadow-soft)}
+.cat-toggle-row{display:flex;gap:8px;flex-wrap:wrap}
+.cat-toggle{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;
+  border:1.5px solid var(--hair);background:var(--cream);cursor:pointer;font-size:12px;font-weight:600;
+  transition:all 0.15s;
+}
+.cat-toggle.active{color:#fff}
+
+/* ===== VET CARD ===== */
+.vet-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.vet-card{border-radius:var(--r-lg);border:1px solid var(--hair);background:var(--paper);padding:20px;box-shadow:var(--shadow-soft)}
+.vet-card-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--hair)}
+.vet-note{padding:10px 0;border-bottom:1px solid var(--hair)}
+.vet-note:last-of-type{border-bottom:none}
+.vet-note-date{font-family:var(--font-mono);font-size:10px;color:var(--mute);margin-bottom:3px}
+.vet-note-title{font-size:13px;font-weight:700;margin-bottom:3px}
+.vet-note-body{font-size:13px;color:var(--ink-2);line-height:1.5}
+.vet-note-vet{font-size:11px;color:var(--mute);margin-top:4px}
+.notes-count{font-size:11px;color:var(--mute);font-family:var(--font-mono)}
+
+/* ===== RUNNING LOW ROW ===== */
+.low-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--hair)}
+.low-row:last-child{border-bottom:none}
+.low-thumb{width:36px;height:36px;border-radius:8px;flex-shrink:0}
+.low-name{flex:1;font-size:13px;font-weight:600}
+.low-sub{font-size:11px;color:var(--mute)}
+
+/* ===== SPEND PAGE ===== */
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--paper);border-radius:var(--r-lg);border:1px solid var(--hair);padding:20px;box-shadow:var(--shadow-soft)}
+.cat-spend-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.cat-spend-tile{border-radius:var(--r-lg);padding:16px;border:1px solid var(--hair);background:var(--paper);box-shadow:var(--shadow-soft);text-align:center}
+.cat-spend-amt{font-family:var(--font-display);font-size:34px;font-weight:400;line-height:1;margin-top:8px}
+
+/* ===== STACKED BAR ===== */
+.stack-bar{height:10px;border-radius:5px;display:flex;overflow:hidden;gap:1px;margin-top:8px}
+
+/* ===== CAT LEGEND ===== */
+.cat-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.cat-legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-2)}
+.cat-legend-dot{width:8px;height:8px;border-radius:50%}
+
+/* ===== MOBILE ===== */
+@media(max-width:700px){
+  #rail{display:none}
+  #mobile-tabs{
+    display:flex;position:fixed;bottom:0;left:0;right:0;height:60px;
+    background:var(--paper);border-top:1px solid var(--hair);z-index:50;
+  }
+  .mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--mute)}
+  .mob-tab.active{color:var(--ink)}
+  .mob-tab svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .mob-tab span{font-size:9px;font-weight:700;text-transform:uppercase}
+  #content{padding-bottom:80px}
+  .cat-tiles{grid-template-columns:1fr 1fr}
+  .dash-grid,.dash-grid-2,.vet-grid,.cat-spend-grid,.kpi-row{grid-template-columns:1fr}
+  .product-grid{grid-template-columns:repeat(2,1fr)}
+  .product-grid-3{grid-template-columns:1fr 1fr}
+  .drawer{width:100%;max-width:100%}
+  .form-row{grid-template-columns:1fr}
+  #topbar{padding:0 16px}
+  #content{padding:16px 16px 60px}
+}
+@media(min-width:701px){#mobile-tabs{display:none}}
+</style>
 </head>
 <body>
-
-<!-- Left Rail -->
-<nav class="rail" id="rail">
-  <div class="rail-logo"><span>p</span></div>
-  <div class="rail-nav">
-    <button class="rail-item active" id="nav-pantry" onclick="switchView('pantry')">
-      <span class="icon">🗃</span>
+<div id="app">
+  <nav id="rail">
+    <div class="rail-logo">P</div>
+    <button class="rail-item active" data-view="home">
+      <svg viewBox="0 0 24 24"><path d="M3 12 12 4l9 8M5 10v10h14V10"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="rail-item" data-view="shop">
+      <svg viewBox="0 0 24 24"><path d="M3 6h2l2 12h12l2-9H6M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
+      <span>Shop</span>
+    </button>
+    <button class="rail-item" data-view="pantry">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16v6H4zM4 14h16v6H4zM9 4v6M9 14v6"/></svg>
       <span>Pantry</span>
     </button>
-    <button class="rail-item" id="nav-shopping" onclick="switchView('shopping')">
-      <span class="icon">🛒</span>
-      <span>Shopping</span>
+    <button class="rail-item" data-view="cal">
+      <svg viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6zM3 10h18M8 2v4M16 2v4"/></svg>
+      <span>Calendar</span>
     </button>
-  </div>
-  <div class="rail-bottom">
-    <button class="export-btn" onclick="exportExcel()" title="Export to Excel">📊</button>
-    <button class="dark-toggle" id="dark-toggle" onclick="toggleDark()">🌙</button>
-  </div>
-</nav>
+    <button class="rail-item" data-view="spend">
+      <svg viewBox="0 0 24 24"><path d="M4 20V6M10 20V10M16 20V13M22 20H2"/></svg>
+      <span>Spend</span>
+    </button>
+    <button class="rail-item" data-view="vet">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>
+      <span>Vet</span>
+    </button>
+    <div class="rail-bottom">
+      <button class="rail-btn" id="dark-toggle" title="Toggle dark mode">🌙</button>
+      <button class="rail-btn" id="export-btn" title="Export">📊</button>
+    </div>
+  </nav>
 
-<!-- Main -->
-<main class="main">
-  <!-- Top Bar -->
-  <div class="topbar">
-    <span class="topbar-brand">pantry</span>
-    <div class="topbar-controls">
-      <select id="currency-select" onchange="setCurrency(this.value)">
-        <option value="HK$">HK$</option>
-        <option value="USD$">USD$</option>
-        <option value="¥">¥</option>
-        <option value="€">€</option>
-        <option value="£">£</option>
-        <option value="SGD$">SGD$</option>
-      </select>
+  <div id="main">
+    <header id="topbar">
+      <div class="topbar-logo">pantry</div>
+      <div class="topbar-right">
+        <select id="currency-sel">
+          <option value="HK$">HK$</option>
+          <option value="$">$</option>
+          <option value="£">£</option>
+          <option value="€">€</option>
+          <option value="¥">¥</option>
+        </select>
+        <div id="cat-pills"></div>
+      </div>
+    </header>
+    <div id="content"><div id="content-inner"></div></div>
+  </div>
+
+  <!-- Mobile tabs -->
+  <div id="mobile-tabs">
+    <div class="mob-tab active" data-view="home">
+      <svg viewBox="0 0 24 24"><path d="M3 12 12 4l9 8M5 10v10h14V10"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="mob-tab" data-view="pantry">
+      <svg viewBox="0 0 24 24"><path d="M4 4h16v6H4zM4 14h16v6H4zM9 4v6M9 14v6"/></svg>
+      <span>Pantry</span>
+    </div>
+    <div class="mob-tab" data-view="shop">
+      <svg viewBox="0 0 24 24"><path d="M3 6h2l2 12h12l2-9H6M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
+      <span>Shop</span>
+    </div>
+    <div class="mob-tab" data-view="vet">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>
+      <span>Vet</span>
     </div>
   </div>
-
-  <!-- Content -->
-  <div class="content" id="main-content"></div>
-</main>
-
-<!-- Mobile Bottom Tabs -->
-<div class="bottom-tabs">
-  <button class="tab-item active" id="tab-pantry" onclick="switchView('pantry')">
-    <span class="icon">🗃</span>
-    <span>Pantry</span>
-  </button>
-  <button class="tab-item add" onclick="openDrawer(null)">+</button>
-  <button class="tab-item" id="tab-shopping" onclick="switchView('shopping')">
-    <span class="icon">🛒</span>
-    <span>Shopping</span>
-  </button>
 </div>
 
-<!-- Drawer Backdrop -->
-<div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
-
-<!-- Drawer -->
-<div class="drawer" id="drawer">
-  <div class="drawer-hero" id="drawer-hero">
-    <button class="drawer-close" onclick="closeDrawer()">✕</button>
-    <span class="drawer-hero-label" id="drawer-hero-label">New Product</span>
-  </div>
-  <div class="drawer-body" id="drawer-body"></div>
-  <div class="drawer-footer">
-    <button class="btn-primary" onclick="saveProduct()">Save</button>
-    <button class="btn-ghost" id="delete-btn" onclick="deleteProduct()" style="display:none">Delete</button>
-  </div>
-</div>
+<!-- Overlay + drawers -->
+<div id="overlay"></div>
+<div id="cat-drawer" class="drawer"></div>
+<div id="form-drawer" class="drawer"></div>
 
 <script>
-// ===== STATE =====
+// ===== CATS =====
 const CATS = [
-  { name: 'Macson',  color: '#6B8AAE', tint: 'var(--c-macson-tint)',  soft: 'var(--c-macson-soft)',  initial: 'M' },
-  { name: 'Miumiu',  color: '#D87A6E', tint: 'var(--c-miumiu-tint)',  soft: 'var(--c-miumiu-soft)',  initial: 'M' },
-  { name: 'Duoduo',  color: '#D9A05A', tint: 'var(--c-duoduo-tint)',  soft: 'var(--c-duoduo-soft)',  initial: 'D' },
-  { name: 'Llaollao',color: '#8AA77B', tint: 'var(--c-llaollao-tint)',soft: 'var(--c-llaollao-soft)',initial: 'L' },
+  { id:'macson',   name:'Macson',   breed:'Russian Blue', age:'6 yrs', weight:'4.8 kg', color:'#6B8AAE', soft:'#E4ECF4', deep:'#3F5874', tint:'#F1F5FA',  initial:'M', vibe:'Loaf-shaped diplomat' },
+  { id:'miumiu',   name:'Miumiu',   breed:'Calico',       age:'4 yrs', weight:'3.6 kg', color:'#D87A6E', soft:'#F6E0DC', deep:'#8A3F36', tint:'#FAEFEC',  initial:'I', vibe:'Zoomie connoisseur' },
+  { id:'duoduo',   name:'Duoduo',   breed:'Orange Tabby', age:'7 yrs', weight:'5.4 kg', color:'#D9A05A', soft:'#F4E5CC', deep:'#8C5A1F', tint:'#FBF3E2',  initial:'D', vibe:'Snack motivated' },
+  { id:'llaollao', name:'Llaollao', breed:'Tuxedo',       age:'3 yrs', weight:'4.1 kg', color:'#8AA77B', soft:'#E1EAD9', deep:'#506849', tint:'#EEF3E9',  initial:'L', vibe:'Bird-watching scholar' },
 ];
+const catMap = {};
+CATS.forEach(c => catMap[c.id] = c);
 
-const CATEGORIES = [
-  { name: 'Food',        icon: '🍖', color: '#C25A3A' },
-  { name: 'Litter',      icon: '🪨', color: '#8C7355' },
-  { name: 'Treats',      icon: '🎁', color: '#D9A05A' },
-  { name: 'Supplements', icon: '💊', color: '#6B8AAE' },
-];
+const CAT_TONE = { Food:'#E89A6E', Litter:'#9A8EB8', Treats:'#D87A6E', Supplements:'#B7B47A' };
 
+// ===== STATE =====
 let products = [];
-let nextId = 1;
+let shopping = [];
+let calendar = [];
+let vet = { macson:[], miumiu:[], duoduo:[], llaollao:[] };
 let currency = 'HK$';
 let dark = false;
-let filterCat = 'All';
-let filterPet = 'All';
-let activeView = 'pantry';
-let drawerOpen = false;
-let editingId = null;
-let checkedIds = new Set();
+let currentView = 'home';
+
+// ===== SEED DATA (first load only) =====
+const SEED_PRODUCTS = [
+  { id:'p1', cat:'Food',        name:'Fancy Feast Tuna',           brand:'Fancy Feast',    packAmount:'85',  packUnit:'g',  price:'1.85', perUnit:'HK$2.18 /100g', store:'PetSmart',          stock:8,  rating:'love', cats:['miumiu','duoduo'],                        note:"Backbone of Mi's dinner rotation.",       tone:'#E89A6E', updatedDate:'May 18' },
+  { id:'p2', cat:'Food',        name:'Orijen Original Dry',        brand:'Orijen',         packAmount:'5.4', packUnit:'kg', price:'64.99',perUnit:'HK$12.04 /kg',  store:'Chewy',             stock:1,  rating:'ok',   cats:['macson','llaollao'],                      note:'Macson eats slow; lasts ~5 weeks.',        tone:'#7B95B0', updatedDate:'Apr 30' },
+  { id:'p3', cat:'Litter',      name:"World's Best Clumping",      brand:"World's Best",   packAmount:'14',  packUnit:'kg', price:'28.50',perUnit:'HK$2.04 /kg',   store:'Target',            stock:0,  rating:'love', cats:['macson','miumiu','duoduo','llaollao'],    note:'Low dust — worth the price.',             tone:'#9A8EB8', updatedDate:'May 12' },
+  { id:'p4', cat:'Treats',      name:'Churu Tuna Sticks',          brand:'Inaba',          packAmount:'14',  packUnit:'g',  price:'4.99', perUnit:'HK$8.91 /100g', store:'Amazon',            stock:12, rating:'love', cats:['miumiu','duoduo','llaollao'],             note:'Universal language.',                     tone:'#D87A6E', updatedDate:'May 20' },
+  { id:'p5', cat:'Supplements', name:'Vetri Lysine',               brand:'Vetri',          packAmount:'120', packUnit:'g',  price:'22.40',perUnit:'HK$18.67 /100g',store:'Chewy',             stock:2,  rating:'ok',   cats:['macson'],                                 note:"For Macson's seasonal flare-ups.",        tone:'#B7B47A', updatedDate:'May 02' },
+  { id:'p6', cat:'Food',        name:'Tiki Cat Luau Pouch',        brand:'Tiki Cat',       packAmount:'80',  packUnit:'g',  price:'2.20', perUnit:'HK$2.75 /100g', store:'Pet Food Express',  stock:5,  rating:'love', cats:['llaollao'],                               note:"L's only confirmed favourite wet food.",  tone:'#8AA77B', updatedDate:'May 17' },
+  { id:'p7', cat:'Food',        name:'Stella & Chewy Freeze-Dried',brand:'Stella & Chewy', packAmount:'14',  packUnit:'kg', price:'38.00',perUnit:'HK$2.71 /kg',   store:'Petco',             stock:1,  rating:'love', cats:['duoduo'],                                 note:'Duoduo dance commences when bag opens.',  tone:'#D9A05A', updatedDate:'May 14' },
+  { id:'p8', cat:'Litter',      name:'Tofu Litter (Pine)',         brand:'Pidan',          packAmount:'7',   packUnit:'kg', price:'18.00',perUnit:'HK$2.57 /kg',   store:'Amazon',            stock:3,  rating:'ok',   cats:['macson','miumiu','duoduo','llaollao'],    note:'Backup when WB is out of stock.',         tone:'#C7B891', updatedDate:'May 05' },
+];
+const SEED_SHOPPING = [
+  { id:'s1', name:"World's Best Clumping Litter", size:'14 lb',  for:['macson','miumiu','duoduo','llaollao'], priority:'urgent', store:'Target',  est:28.50, done:false },
+  { id:'s2', name:'Orijen Original Dry',          size:'5.4 kg', for:['macson','llaollao'],                    priority:'soon',   store:'Chewy',   est:64.99, done:false },
+  { id:'s3', name:'Stella & Chewy Freeze-Dried',  size:'14 oz',  for:['duoduo'],                               priority:'soon',   store:'Petco',   est:38.00, done:false },
+  { id:'s4', name:'Vetri Lysine refill',          size:'120 g',  for:['macson'],                               priority:'watch',  store:'Chewy',   est:22.40, done:false },
+  { id:'s5', name:'Churu Tuna multipack',         size:'×20',    for:['miumiu','duoduo','llaollao'],           priority:'watch',  store:'Amazon',  est:14.99, done:true  },
+];
+const SEED_CALENDAR = [
+  { id:'c1', date:'May 22', kind:'purchase', catId:null,      title:'Tiki Cat ×4 pouches',        detail:'Pet Food Express · HK$8.80' },
+  { id:'c2', date:'May 20', kind:'purchase', catId:null,      title:'Churu Tuna multipack',        detail:'Amazon · HK$14.99' },
+  { id:'c3', date:'May 18', kind:'vet',      catId:'macson',  title:'Macson · dental check',       detail:'Dr. Yamada · 12:30pm' },
+  { id:'c4', date:'May 14', kind:'purchase', catId:null,      title:'Stella & Chewy 14oz',         detail:'Petco · HK$38.00' },
+  { id:'c5', date:'May 12', kind:'refill',   catId:null,      title:'Litter refill due',           detail:"World's Best · 14 lb" },
+  { id:'c6', date:'May 07', kind:'vet',      catId:'miumiu',  title:'Miumiu · vaccine',            detail:'Dr. Yamada · 09:00am' },
+  { id:'c7', date:'May 02', kind:'purchase', catId:null,      title:'Vetri Lysine 120g',           detail:'Chewy · HK$22.40' },
+];
+const SEED_VET = {
+  macson:   [
+    { date:'May 18', title:'Dental check',  body:'Mild tartar on canines. Switch to dental treats; recheck in 6mo.',         vet:'Dr. Yamada' },
+    { date:'Mar 04', title:'Weight notes',  body:'Down 200g from January peak — keep current portion.',                       vet:'Dr. Yamada' },
+    { date:'Feb 11', title:'Allergy flare', body:'Seasonal sneezing returned. Start Lysine 250mg daily for 4 wks.',          vet:'Dr. Yamada' },
+  ],
+  miumiu:   [
+    { date:'May 07', title:'Annual vaccines',body:'FVRCP + rabies updated. Next due May 2027.',                               vet:'Dr. Yamada' },
+    { date:'Jan 22', title:'Spay check',    body:'Healing fully closed. No restrictions.',                                    vet:'Dr. Yamada' },
+  ],
+  duoduo:   [
+    { date:'Apr 02', title:'Weight check',  body:'5.4 kg, slightly above ideal. Cut treats to 1/day.',                       vet:'Dr. Yamada' },
+    { date:'Nov 14', title:'Annual checkup',body:'All clear. Bloodwork unremarkable.',                                        vet:'Dr. Lin' },
+  ],
+  llaollao: [
+    { date:'Mar 28', title:'Annual checkup',body:'Healthy. Slight gingivitis on lower right — monitor.',                      vet:'Dr. Lin' },
+  ],
+};
 
 // ===== PERSISTENCE =====
-function save() {
+function loadData() {
+  try { products  = JSON.parse(localStorage.getItem('pantry_products') || '[]'); } catch(e){ products=[]; }
+  try { shopping  = JSON.parse(localStorage.getItem('pantry_shopping') || '[]'); } catch(e){ shopping=[]; }
+  try { calendar  = JSON.parse(localStorage.getItem('pantry_calendar') || '[]'); } catch(e){ calendar=[]; }
+  try { vet       = JSON.parse(localStorage.getItem('pantry_vet') || 'null') || { macson:[], miumiu:[], duoduo:[], llaollao:[] }; } catch(e){ vet={ macson:[], miumiu:[], duoduo:[], llaollao:[] }; }
+  currency = localStorage.getItem('pantry_currency') || 'HK$';
+  dark = localStorage.getItem('pantry_dark') === 'true';
+  // Seed on first load
+  if (!localStorage.getItem('pantry_seeded')) {
+    products  = SEED_PRODUCTS;
+    shopping  = SEED_SHOPPING;
+    calendar  = SEED_CALENDAR;
+    vet       = SEED_VET;
+    localStorage.setItem('pantry_seeded', '1');
+    saveData();
+  }
+}
+function saveData() {
   localStorage.setItem('pantry_products', JSON.stringify(products));
-  localStorage.setItem('pantry_nextId', String(nextId));
+  localStorage.setItem('pantry_shopping', JSON.stringify(shopping));
+  localStorage.setItem('pantry_calendar', JSON.stringify(calendar));
+  localStorage.setItem('pantry_vet', JSON.stringify(vet));
   localStorage.setItem('pantry_currency', currency);
   localStorage.setItem('pantry_dark', String(dark));
 }
 
-function load() {
-  try {
-    const p = localStorage.getItem('pantry_products');
-    if (p) products = JSON.parse(p);
-  } catch(e) {}
-  nextId = parseInt(localStorage.getItem('pantry_nextId') || '1');
-  currency = localStorage.getItem('pantry_currency') || 'HK$';
-  dark = localStorage.getItem('pantry_dark') === 'true';
-
-  if (dark) {
-    document.documentElement.classList.add('dark');
-    document.getElementById('dark-toggle').textContent = '☀️';
-  }
-
-  const cs = document.getElementById('currency-select');
-  if (cs) cs.value = currency;
-}
-
 // ===== HELPERS =====
-function getCat(name) {
-  return CATS.find(c => c.name === name) || CATS[0];
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function calcPerUnit(amount, unit, price, cur) {
+  const a = parseFloat(amount), p = parseFloat(price);
+  if (!a || !p || isNaN(a) || isNaN(p)) return '—';
+  if (unit === 'g') return `${cur}${(p/a*100).toFixed(2)} /100g`;
+  if (unit === 'kg') return `${cur}${(p/a).toFixed(2)} /kg`;
+  return '—';
 }
 
-function getCatByIdx(i) { return CATS[i]; }
-
-function getCatColor(name) {
-  const c = getCat(name);
-  return c ? c.color : '#8C8276';
+function catAvatar(cat, size='md') {
+  return `<div class="cat-av ${size}" style="background:${cat.color}">${cat.initial}</div>`;
 }
 
-function getCategoryColor(name) {
-  const c = CATEGORIES.find(x => x.name === name);
-  return c ? c.color : '#8C8276';
+function catPip(catId) {
+  const c = catMap[catId]; if(!c) return '';
+  return `<div class="cat-pip" style="background:${c.color}">${c.initial}</div>`;
 }
 
-function getCategoryIcon(name) {
-  const c = CATEGORIES.find(x => x.name === name);
-  return c ? c.icon : '📦';
+function stockBadge(stock) {
+  const n = parseInt(stock) || 0;
+  if (n <= 0) return `<span class="stock-badge low">Out</span>`;
+  if (n <= 1) return `<span class="stock-badge low">${n} left</span>`;
+  return `<span class="stock-badge">${n}</span>`;
 }
 
-function calcPrice(product) {
-  const amt = parseFloat(product.amount);
-  const pr = parseFloat(product.price);
-  if (!amt || !pr) return '—';
-  if (product.unit === 'g') {
-    return `${currency}${(pr / amt * 100).toFixed(2)} /100g`;
-  } else {
-    return `${currency}${(pr / amt).toFixed(2)} /kg`;
-  }
+function productThumbnail(tone, label, cls='') {
+  return `<div class="ph ${cls}" style="--tone:${tone||'#D9CFB6'}">${label||''}</div>`;
 }
 
-function calcPriceRaw(amount, price, unit) {
-  const amt = parseFloat(amount);
-  const pr = parseFloat(price);
-  if (!amt || !pr) return '—';
-  if (unit === 'g') {
-    return `${currency}${(pr / amt * 100).toFixed(2)} /100g`;
-  } else {
-    return `${currency}${(pr / amt).toFixed(2)} /kg`;
-  }
+function shopPrioBadge(p) {
+  if (p==='urgent') return `<span class="prio-badge prio-urgent">Urgent</span>`;
+  if (p==='soon')   return `<span class="prio-badge prio-soon">Soon</span>`;
+  return `<span class="prio-badge prio-watch">Watch</span>`;
 }
 
-function formatDate(iso) {
+function monthSpend() {
+  const now = new Date();
+  return calendar.filter(e => e.kind==='purchase' && new Date(e.date).getMonth()===now.getMonth() && new Date(e.date).getFullYear()===now.getFullYear())
+    .reduce((sum,e) => sum + (parseFloat((e.detail||'').match(/[\d.]+/)?.[0])||0), 0);
+}
+
+function catSpend(catId) {
+  return products.filter(p => (p.cats||[]).includes(catId))
+    .reduce((sum,p) => sum + (parseFloat(p.price)||0), 0);
+}
+
+function lowProducts() {
+  return products.filter(p => (parseInt(p.stock)||0) <= 1);
+}
+
+function openItems() {
+  return shopping.filter(s => !s.done);
+}
+
+function fmtDate(iso) {
   if (!iso) return '';
-  try {
-    const d = new Date(iso);
-    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  } catch(e) { return iso; }
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
 }
 
-function todayISO() {
-  return new Date().toISOString().split('T')[0];
+function fmtMonthYear(d) {
+  return d.toLocaleDateString('en-GB', {month:'long', year:'numeric'});
 }
 
-function formatTodayDisplay() {
-  return new Date().toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-  }).toUpperCase();
+function fmtDay(d) {
+  return d.toLocaleDateString('en-GB', {weekday:'long'});
 }
 
-function filteredProducts() {
-  return products.filter(p => {
-    if (filterCat !== 'All' && p.category !== filterCat) return false;
-    if (filterPet !== 'All' && !(p.forCats || []).includes(filterPet)) return false;
-    return true;
-  });
+function fmtShort(d) {
+  return d.toLocaleDateString('en-GB', {day:'numeric', month:'short'});
 }
 
-function catProductCount(catName) {
-  return products.filter(p => (p.forCats || []).includes(catName)).length;
+function monthlySpends(months=6) {
+  const now = new Date();
+  const res = [];
+  for (let i = months-1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const total = calendar.filter(e => e.kind==='purchase' && new Date(e.date).getMonth()===d.getMonth() && new Date(e.date).getFullYear()===d.getFullYear())
+      .reduce((sum,e)=>sum+(parseFloat((e.detail||'').match(/[\d.]+/)?.[0])||0),0);
+    res.push({ label: d.toLocaleDateString('en-GB',{month:'short'}), val: total });
+  }
+  return res;
 }
 
-function categoryCount(cat) {
-  if (cat === 'All') return filteredProducts().length;
-  return products.filter(p => {
-    if (p.category !== cat) return false;
-    if (filterPet !== 'All' && !(p.forCats || []).includes(filterPet)) return false;
-    return true;
-  }).length;
-}
-
-// ===== VIEW SWITCHING =====
-function switchView(view) {
-  activeView = view;
-
-  document.getElementById('nav-pantry').classList.toggle('active', view === 'pantry');
-  document.getElementById('nav-shopping').classList.toggle('active', view === 'shopping');
-
-  const tabP = document.getElementById('tab-pantry');
-  const tabS = document.getElementById('tab-shopping');
-  if (tabP) tabP.classList.toggle('active', view === 'pantry');
-  if (tabS) tabS.classList.toggle('active', view === 'shopping');
-
-  render();
-}
-
-// ===== TOGGLE DARK =====
-function toggleDark() {
-  dark = !dark;
-  document.documentElement.classList.toggle('dark', dark);
-  document.getElementById('dark-toggle').textContent = dark ? '☀️' : '🌙';
-  save();
-}
-
-function setCurrency(val) {
-  currency = val;
-  save();
-  render();
-}
-
-// ===== RENDER =====
+// ===== RENDER ENGINE =====
 function render() {
-  const el = document.getElementById('main-content');
-  if (activeView === 'pantry') {
-    el.innerHTML = renderPantry();
-  } else {
-    el.innerHTML = renderShopping();
-  }
+  document.getElementById('content-inner').innerHTML = views[currentView]();
+  bindViewEvents();
 }
 
-function renderPantry() {
-  const fp = filteredProducts();
-  const lowCount = products.filter(p => p.stock !== '' && p.stock !== null && p.stock !== undefined && parseFloat(p.stock) <= 1).length;
+function navigate(view) {
+  currentView = view;
+  document.querySelectorAll('.rail-item').forEach(el => el.classList.toggle('active', el.dataset.view===view));
+  document.querySelectorAll('.mob-tab').forEach(el => el.classList.toggle('active', el.dataset.view===view));
+  render();
+}
 
-  let html = `
-    <div class="greeting">
-      <div class="greeting-title">pantry</div>
-      <div class="greeting-date">${formatTodayDisplay()}</div>
-    </div>
+// ===== VIEWS =====
+const views = {};
 
-    <div class="cat-tiles">
-      ${CATS.map(cat => `
-        <div class="cat-tile ${filterPet === cat.name ? 'active' : ''}"
-             style="background: ${cat.tint};"
-             onclick="togglePetFilter('${cat.name}')">
-          <div class="cat-tile-top">
-            <div class="cat-avatar" style="background: ${cat.color}">${cat.initial}</div>
-            <span class="cat-count">${catProductCount(cat.name)}</span>
-          </div>
-          <span class="cat-tile-name">${cat.name}</span>
-          <div class="cat-tile-sub">${catProductCount(cat.name)} product${catProductCount(cat.name) !== 1 ? 's' : ''}</div>
-        </div>
-      `).join('')}
-    </div>
+// ---- HOME ----
+views.home = function() {
+  const now = new Date();
+  const dayStr = fmtDay(now);
+  const dateStr = fmtShort(now);
+  const low = lowProducts();
+  const open = openItems();
+  const spend = monthSpend();
+  const yrTotal = (() => {
+    const yr = now.getFullYear();
+    return calendar.filter(e => e.kind==='purchase' && new Date(e.date).getFullYear()===yr)
+      .reduce((s,e)=>s+(parseFloat((e.detail||'').match(/[\d.]+/)?.[0])||0),0);
+  })();
+  const months = monthlySpends(6);
+  const maxM = Math.max(...months.map(m=>m.val), 1);
 
-    <div class="filter-row">
-      ${['All', ...CATEGORIES.map(c => c.name)].map(cat => `
-        <button class="filter-pill ${filterCat === cat ? 'active' : ''}"
-                onclick="setFilterCat('${cat}')">
-          ${cat !== 'All' ? getCategoryIcon(cat) + ' ' : ''}${cat}
-          <span class="pill-count">${categoryCount(cat === 'All' ? 'All' : cat)}</span>
-        </button>
-      `).join('')}
-    </div>
-
-    <div class="product-list" id="product-list">
-  `;
-
-  if (fp.length === 0) {
-    html += `
-      <div class="empty-state">
-        <div class="empty-state-icon">🐱</div>
-        <div class="empty-state-text">No products yet</div>
-        <div class="empty-state-sub">Click "+ Add product" below to get started</div>
+  // cat tiles
+  const catTilesHtml = CATS.map(cat => {
+    const sp = catSpend(cat.id);
+    const prods = products.filter(p=>(p.cats||[]).includes(cat.id));
+    const swatches = prods.slice(0,4).map(p=>{
+      const tone = p.tone || CAT_TONE[p.category] || '#D9CFB6';
+      return `<div class="swatch" style="background:${tone}"></div>`;
+    }).join('');
+    return `<div class="cat-tile" style="background:${cat.tint}" data-cat-drawer="${cat.id}">
+      <div class="cat-tile-row1">
+        ${catAvatar(cat,'md')}
+        <div style="font-family:var(--font-display);font-size:22px;font-weight:500;color:${cat.deep}">${currency}${sp.toFixed(0)}</div>
       </div>
-    `;
-  } else {
-    fp.forEach(p => {
-      const stockNum = p.stock !== '' && p.stock !== null && p.stock !== undefined ? parseFloat(p.stock) : null;
-      const isLow = stockNum !== null && stockNum <= 1;
-      const stockLabel = stockNum !== null ? `${stockNum} left` : 'No stock info';
-      const priceLabel = calcPrice(p);
-      const metaParts = [];
-      if (p.amount) metaParts.push(`${p.amount}${p.unit}`);
-      if (p.store) metaParts.push(p.store);
-      if (p.date) metaParts.push(formatDate(p.date));
-      const catColor = getCategoryColor(p.category);
+      <div class="cat-tile-name" style="color:${cat.deep}">${cat.name}</div>
+      <div class="cat-tile-sub">${cat.breed} · ${cat.weight}</div>
+      <div class="cat-tile-swatches">${swatches}<span class="swatch-count">${prods.length} items</span></div>
+    </div>`;
+  }).join('');
 
-      html += `
-        <div class="product-card" onclick="openDrawer(${p.id})">
-          <div class="cat-icon" style="background: ${catColor}">
-            <span>${getCategoryIcon(p.category)}</span>
-          </div>
-          <div class="product-info">
-            <div class="product-name">${escHtml(p.name || 'Unnamed')}</div>
-            <div class="product-meta">${metaParts.map(escHtml).join(' · ')}</div>
-          </div>
-          <span class="stock-pill ${isLow ? 'low' : ''}">${stockLabel}</span>
-          <span class="price-unit">${priceLabel}</span>
-          <div class="cat-chips">
-            ${(p.forCats || []).map(cn => {
-              const c = getCat(cn);
-              return `<div class="cat-chip" style="background:${c.color}" title="${escHtml(cn)}">${c.initial}</div>`;
-            }).join('')}
-          </div>
-          <span class="product-rating">${p.rating === '😻' ? '😻' : p.rating === '😐' ? '😐' : p.rating === '😾' ? '😾' : ''}</span>
+  // shopping list
+  const shopHtml = open.slice(0,6).map(s => `
+    <div class="shop-item${s.done?' done':''}">
+      <div class="shop-cb${s.done?' checked':''}" data-toggle-shop="${s.id}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="shop-name">${s.name}</div>
+        <div class="shop-meta">
+          ${shopPrioBadge(s.priority)}
+          ${s.store ? `<span>${s.store}</span>` : ''}
+          ${(s.for||[]).map(catPip).join('')}
         </div>
-      `;
-    });
+      </div>
+      <div class="shop-price">${s.est ? currency+parseFloat(s.est).toFixed(0) : ''}</div>
+    </div>`).join('');
+
+  // stacked bar
+  const stackTotal = CATS.reduce((s,c)=>s+catSpend(c.id),0)||1;
+  const stackBars = CATS.map(c => {
+    const sp = catSpend(c.id);
+    const pct = (sp/stackTotal*100).toFixed(1);
+    return `<div style="flex:${pct};background:${c.color};height:100%"></div>`;
+  }).join('');
+  const catLegend = CATS.map(c=>`<div class="cat-legend-item"><div class="cat-legend-dot" style="background:${c.color}"></div>${c.name}</div>`).join('');
+
+  // mini bar chart
+  const barCols = months.map((m,i)=>{
+    const h = Math.max(8, Math.round(m.val/maxM*100));
+    const isLast = i===months.length-1;
+    return `<div class="bar-col">
+      <div class="bar-val" style="font-size:9px">${m.val>0?currency+Math.round(m.val):''}</div>
+      <div class="bar-fill" style="height:${h}%;background:${isLast?'var(--ink)':'var(--hair-2)'}"></div>
+      <div class="bar-label">${m.label}</div>
+    </div>`;
+  }).join('');
+
+  // running low
+  const lowHtml = low.slice(0,4).map(p=>{
+    const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
+    return `<div class="low-row">
+      <div class="low-thumb ph" style="width:36px;height:36px;border-radius:8px;--tone:${tone};font-size:8px;align-items:flex-end;padding:3px 4px">${p.category||''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="low-name">${p.name}</div>
+        <div class="low-sub">${p.brand||''}</div>
+      </div>
+      ${stockBadge(p.stock)}
+    </div>`;
+  }).join('');
+
+  // recent calendar events
+  const recent = [...calendar].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,5);
+  const recentHtml = recent.map(e=>{
+    const kindColors = {purchase:'#6E8B53',vet:'#C25A3A',refill:'#6B8AAE',other:'#8C8276'};
+    const cat = e.catId ? catMap[e.catId] : null;
+    return `<div class="timeline-row">
+      <div class="timeline-dot" style="background:${kindColors[e.kind]||'#8C8276'}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="timeline-title">${e.title}</div>
+        <div class="timeline-sub">${fmtDate(e.date)}${cat?` · ${cat.name}`:''}</div>
+      </div>
+    </div>`;
+  }).join('') || `<div style="color:var(--mute);font-size:13px;padding:12px 0">No events yet.</div>`;
+
+  // pantry preview
+  const previewProds = products.slice(0,3).map(p=>{
+    const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
+    const pu = calcPerUnit(p.packAmount,p.packUnit,p.price,currency);
+    return `<div class="product-card" data-edit-product="${p.id}">
+      ${productThumbnail(tone, p.category)}
+      <div class="product-card-body">
+        <div class="product-card-name">${p.name}</div>
+        <div class="product-card-sub">${p.packSize||''} · ${pu}</div>
+        <div class="product-card-pips">${(p.cats||[]).map(catPip).join('')}</div>
+      </div>
+    </div>`;
+  }).join('') || `<div style="grid-column:1/-1;color:var(--mute);font-size:13px">No products yet.</div>`;
+
+  return `
+  <div class="page-header">
+    <div class="page-kicker">${dayStr}, ${dateStr}</div>
+    <h1 class="page-title">Morning, <em>Darren.</em></h1>
+    <div class="page-sub">${low.length ? `${low.length} product${low.length>1?'s':''} running low.` : 'All stocked up — nice.'} ${open.length} item${open.length===1?'':'s'} on the shopping list.</div>
+    <div class="page-actions">
+      <button class="btn btn-ghost" id="export-btn2">📊 Export</button>
+      <button class="btn btn-primary" data-open-form="product,new">+ Log purchase</button>
+    </div>
+  </div>
+
+  <div class="cat-tiles">${catTilesHtml}</div>
+
+  <div class="dash-grid">
+    <div class="card span2">
+      <div class="card-h">
+        <h3>Shopping list</h3>
+        <span class="badge badge-ink">${open.length}</span>
+      </div>
+      ${shopHtml || `<div style="color:var(--mute);font-size:13px;padding:8px 0">Nothing on the list.</div>`}
+      <button class="add-stub" data-open-form="shopping,new">+ Add item</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card">
+        <div class="card-h">
+          <h3>Spend</h3>
+          <span class="badge badge-mute">${now.toLocaleDateString('en-GB',{month:'short'})} · ${currency}${spend.toFixed(0)}</span>
+        </div>
+        <div class="bignum">${currency}${spend.toFixed(0)}</div>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:80px;margin-top:10px">${barCols}</div>
+        <div class="stack-bar" style="margin-top:12px">${stackBars}</div>
+        <div class="cat-legend">${catLegend}</div>
+      </div>
+      <div class="card">
+        <div class="card-h">
+          <h3>Running low</h3>
+          <span class="badge badge-warn">${low.length}</span>
+        </div>
+        ${lowHtml || `<div style="color:var(--mute);font-size:13px;padding:8px 0">All stocked up!</div>`}
+      </div>
+    </div>
+  </div>
+
+  <div class="dash-grid-2" style="margin-top:16px">
+    <div class="card">
+      <div class="card-h"><h3>Pantry preview</h3><button class="btn btn-ghost" style="font-size:12px" onclick="navigate('pantry')">View all</button></div>
+      <div class="product-grid-3">${previewProds}</div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>Recent</h3></div>
+      ${recentHtml}
+    </div>
+  </div>`;
+};
+
+// ---- SHOPPING ----
+views.shop = function() {
+  const urgent = shopping.filter(s=>!s.done && s.priority==='urgent');
+  const soon   = shopping.filter(s=>!s.done && s.priority==='soon');
+  const watch  = shopping.filter(s=>!s.done && s.priority==='watch');
+  const done   = shopping.filter(s=>s.done);
+  const openTotal = shopping.filter(s=>!s.done).reduce((t,s)=>t+(parseFloat(s.est)||0),0);
+  const openCount = shopping.filter(s=>!s.done).length;
+
+  function renderGroup(items, label) {
+    if (!items.length) return '';
+    const rows = items.map(s => `
+      <div class="shop-item${s.done?' done':''}">
+        <div class="shop-cb${s.done?' checked':''}" data-toggle-shop="${s.id}"></div>
+        <div style="flex:1;min-width:0">
+          <div class="shop-name">${s.name}</div>
+          <div class="shop-meta">
+            ${s.size ? `<span>${s.size}</span>` : ''}
+            ${s.store ? `<span>${s.store}</span>` : ''}
+            ${(s.for||[]).map(catPip).join('')}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="shop-price">${s.est?currency+parseFloat(s.est).toFixed(0):''}</div>
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" data-edit-shop="${s.id}">Edit</button>
+        </div>
+      </div>`).join('');
+    return `<div class="card" style="margin-bottom:12px">
+      <div class="card-h"><h3>${label}</h3><span class="badge badge-mute">${items.length}</span></div>
+      ${rows}
+    </div>`;
   }
 
-  html += `
-    </div>
-    <div class="add-stub" onclick="openDrawer(null)">+ Add product</div>
-  `;
-
-  return html;
-}
-
-function renderShopping() {
-  const lowStock = products
-    .filter(p => p.stock !== '' && p.stock !== null && p.stock !== undefined && parseFloat(p.stock) <= 1)
-    .sort((a, b) => parseFloat(a.stock) - parseFloat(b.stock));
-
-  let html = `
-    <div class="shopping-header">
+  // by store
+  const storeMap = {};
+  shopping.filter(s=>!s.done).forEach(s=>{
+    const st = s.store||'(no store)';
+    if (!storeMap[st]) storeMap[st] = {items:[],est:0};
+    storeMap[st].items.push(s);
+    storeMap[st].est += parseFloat(s.est)||0;
+  });
+  const storeHtml = Object.entries(storeMap).map(([st,d])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--hair)">
       <div>
-        <div class="shopping-title">shopping</div>
-        <div class="shopping-sub">${lowStock.length} item${lowStock.length !== 1 ? 's' : ''} running low</div>
+        <div style="font-size:13px;font-weight:600">${st}</div>
+        <div style="font-size:11px;color:var(--mute)">${d.items.length} item${d.items.length>1?'s':''}</div>
+      </div>
+      <div style="font-family:var(--font-mono);font-size:13px;font-weight:600">${currency}${d.est.toFixed(0)}</div>
+    </div>`).join('') || `<div style="color:var(--mute);font-size:13px">No stores yet.</div>`;
+
+  return `
+  <div class="page-header">
+    <div class="page-kicker">Shopping</div>
+    <h1 class="page-title">What's on the list.</h1>
+    <div class="page-sub">${openCount} open · est total ${currency}${openTotal.toFixed(0)}</div>
+    <div class="page-actions">
+      <button class="btn btn-ghost">Sort by store</button>
+      <button class="btn btn-primary" data-open-form="shopping,new">+ Add item</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
+    <div>
+      ${renderGroup(urgent,'Urgent') || (urgent.length===0 ? '' : '')}
+      ${renderGroup(soon,'This week')}
+      ${renderGroup(watch,'Watch list')}
+      ${done.length ? `<div class="card">
+        <div class="card-h"><h3>Done</h3><span class="badge badge-mute">${done.length}</span></div>
+        ${done.map(s=>`<div class="shop-item done">
+          <div class="shop-cb checked" data-toggle-shop="${s.id}"></div>
+          <div style="flex:1"><div class="shop-name">${s.name}</div></div>
+          <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" data-edit-shop="${s.id}">Edit</button>
+        </div>`).join('')}
+      </div>` : ''}
+      ${!shopping.length ? `<div class="card" style="color:var(--mute);text-align:center;padding:40px">Nothing on the list yet.</div>` : ''}
+      <button class="add-stub" data-open-form="shopping,new" style="margin-top:4px">+ Add item</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card">
+        <div class="card-h"><h3>By store</h3></div>
+        ${storeHtml}
+      </div>
+      <div class="card" style="background:var(--llaollao-tint,#EEF3E9)">
+        <div class="kpi-label">Estimated total</div>
+        <div class="bignum">${currency}${openTotal.toFixed(0)}</div>
+        <div class="kpi-delta">${openCount} items open</div>
       </div>
     </div>
-    <div class="product-list">
-  `;
+  </div>`;
+};
 
-  if (lowStock.length === 0) {
-    html += `
-      <div class="empty-state">
-        <div class="empty-state-icon">✅</div>
-        <div class="empty-state-text">All stocked up!</div>
-        <div class="empty-state-sub">No items running low right now</div>
+// ---- PANTRY ----
+views.pantry = function() {
+  const total = products.length;
+  const cats = ['All','Food','Litter','Treats','Supplements'];
+  let pantryCatFilter = window._pantryCatFilter || 'All';
+  let pantryForFilter = window._pantryForFilter || 'anyone';
+
+  const filtered = products.filter(p => {
+    const catOk = pantryCatFilter==='All' || p.category===pantryCatFilter;
+    const forOk = pantryForFilter==='anyone' || (p.cats||[]).includes(pantryForFilter);
+    return catOk && forOk;
+  });
+
+  const segBtns = cats.map(c=>`<button class="seg-btn${pantryCatFilter===c?' active':''}" data-pantry-cat="${c}">${c}</button>`).join('');
+  const forPills = CATS.map(c=>`<button class="filt-cat${pantryForFilter===c.id?' active':''}" style="${pantryForFilter===c.id?'background:'+c.color:''}" data-pantry-for="${c.id}">${c.name}</button>`).join('');
+  const anyonePill = `<button class="filt-cat${pantryForFilter==='anyone'?' active':''}" data-pantry-for="anyone">Anyone</button>`;
+
+  const prodCards = filtered.map(p=>{
+    const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
+    const pu = calcPerUnit(p.packAmount,p.packUnit,p.price,currency);
+    return `<div class="product-card" data-edit-product="${p.id}">
+      ${productThumbnail(tone, p.category)}
+      <div class="product-card-body">
+        <div class="product-card-name" title="${p.name}">${p.name}</div>
+        <div class="product-card-sub">${[p.packSize,pu].filter(Boolean).join(' · ')}</div>
+        <div class="product-card-pips">${(p.cats||[]).map(catPip).join('')}</div>
       </div>
-    `;
-  } else {
-    lowStock.forEach(p => {
-      const isChecked = checkedIds.has(p.id);
-      const catColor = getCategoryColor(p.category);
-      const priceLabel = calcPrice(p);
+    </div>`;
+  }).join('') || `<div style="grid-column:1/-1;color:var(--mute);font-size:13px;padding:20px 0">No products here yet.</div>`;
 
-      html += `
-        <div class="shopping-card">
-          <button class="check-btn ${isChecked ? 'checked' : ''}"
-                  onclick="toggleCheck(${p.id}, event)">
-            ${isChecked ? '✓' : ''}
-          </button>
-          <div class="cat-icon" style="background: ${catColor}; opacity: ${isChecked ? '0.4' : '1'}">
-            <span>${getCategoryIcon(p.category)}</span>
-          </div>
-          <div class="product-info" style="opacity: ${isChecked ? '0.4' : '1'}">
-            <div class="product-name">${escHtml(p.name || 'Unnamed')}</div>
-            <div class="product-meta">${escHtml(p.store || '')}${p.store && p.amount ? ' · ' : ''}${p.amount ? p.amount + p.unit : ''}</div>
-          </div>
-          <span class="stock-pill low" style="opacity: ${isChecked ? '0.4' : '1'}">${p.stock} left</span>
-          <span class="price-unit" style="opacity: ${isChecked ? '0.4' : '1'}">${priceLabel}</span>
+  return `
+  <div class="page-header">
+    <div class="page-kicker">Pantry</div>
+    <h1 class="page-title">Every box, bag &amp; pouch.</h1>
+    <div class="page-sub">${filtered.length} of ${total} products</div>
+    <div class="page-actions">
+      <button class="btn btn-ghost" id="export-csv-btn">Export CSV</button>
+      <button class="btn btn-primary" data-open-form="product,new">+ Add product</button>
+    </div>
+  </div>
+  <div class="filter-row">
+    <div class="seg">${segBtns}</div>
+    <span class="filt-label">For</span>
+    ${anyonePill}
+    ${forPills}
+  </div>
+  <div class="card">
+    <div class="product-grid">${prodCards}</div>
+  </div>`;
+};
+
+// ---- CALENDAR ----
+views.cal = function() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const offset = (firstDay + 6) % 7; // Mon=0
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrev = new Date(year, month, 0).getDate();
+  const totalCells = Math.ceil((offset+daysInMonth)/7)*7;
+  const today = now.getDate();
+
+  const kindColors = {purchase:'#6E8B53',vet:'#C25A3A',refill:'#6B8AAE',other:'#8C8276'};
+  const kindBg    = {purchase:'#D8E9CC',vet:'#F2D0C3',refill:'#D9E4F4',other:'#E8E3DC'};
+
+  // Map events by day
+  const evByDay = {};
+  calendar.forEach(e => {
+    const d = new Date(e.date);
+    if (d.getFullYear()===year && d.getMonth()===month) {
+      const day = d.getDate();
+      if (!evByDay[day]) evByDay[day] = [];
+      evByDay[day].push(e);
+    }
+  });
+
+  let cells = '';
+  for (let i=0; i<totalCells; i++) {
+    const dayNum = i-offset+1;
+    let dim=false, dispNum=dayNum, dateStr='';
+    if (dayNum < 1) { dispNum=daysInPrev+dayNum; dim=true; }
+    else if (dayNum > daysInMonth) { dispNum=dayNum-daysInMonth; dim=true; }
+    else { dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`; }
+
+    const isToday = !dim && dayNum===today;
+    const evs = (!dim && evByDay[dayNum]) || [];
+    const evHtml = evs.slice(0,2).map(e=>`<div class="cal-ev" style="background:${kindBg[e.kind]||'#E8E3DC'};color:${kindColors[e.kind]||'#8C8276'}">${e.title}</div>`).join('');
+    cells += `<div class="cal-cell${dim?' dim':''}${isToday?' today':''}" data-date="${dateStr}">
+      <div class="cal-num">${dispNum}</div>
+      ${evHtml}
+    </div>`;
+  }
+
+  const upcoming = [...calendar]
+    .filter(e=>new Date(e.date)>=new Date(year,month,today))
+    .sort((a,b)=>new Date(a.date)-new Date(b.date))
+    .slice(0,8);
+
+  const upHtml = upcoming.map(e=>{
+    const cat = e.catId?catMap[e.catId]:null;
+    return `<div class="timeline-row">
+      <div class="timeline-dot" style="background:${kindColors[e.kind]||'#8C8276'}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="timeline-title">${e.title}</div>
+        <div class="timeline-sub">${fmtDate(e.date)}${cat?` · ${cat.name}`:''} · <span style="text-transform:capitalize">${e.kind}</span></div>
+      </div>
+      <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" data-edit-event="${e.id}">Edit</button>
+    </div>`;
+  }).join('') || `<div style="color:var(--mute);font-size:13px;padding:12px 0">No upcoming events.</div>`;
+
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const dayHeaders = days.map(d=>`<div class="cal-header-cell">${d}</div>`).join('');
+
+  return `
+  <div class="page-header">
+    <div class="page-kicker">${fmtMonthYear(now)}</div>
+    <h1 class="page-title">A month of <em>tiny obligations.</em></h1>
+    <div class="page-actions">
+      <button class="btn btn-primary" data-open-form="event,new">+ New event</button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:16px">
+    <div class="card">
+      <div class="cal-grid">${dayHeaders}${cells}</div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>Upcoming</h3></div>
+      ${upHtml}
+      <button class="add-stub" data-open-form="event,new" style="margin-top:8px">+ New event</button>
+    </div>
+  </div>`;
+};
+
+// ---- SPEND ----
+views.spend = function() {
+  const now = new Date();
+  const spend = monthSpend();
+  const total = CATS.reduce((s,c)=>s+catSpend(c.id),0);
+  const perCat = total/CATS.length;
+  const yrTotal = (() => {
+    const yr=now.getFullYear();
+    return calendar.filter(e=>e.kind==='purchase'&&new Date(e.date).getFullYear()===yr)
+      .reduce((s,e)=>s+(parseFloat((e.detail||'').match(/[\d.]+/)?.[0])||0),0);
+  })();
+  const months = monthlySpends(6);
+  const maxM = Math.max(...months.map(m=>m.val),1);
+
+  const barCols = months.map((m,i)=>{
+    const h = Math.max(8, Math.round(m.val/maxM*100));
+    const isLast = i===months.length-1;
+    return `<div class="bar-col">
+      <div class="bar-val">${m.val>0?currency+Math.round(m.val):''}</div>
+      <div class="bar-fill" style="height:${h}%;background:${isLast?'var(--ink)':'var(--hair-2)'}"></div>
+      <div class="bar-label">${m.label}</div>
+    </div>`;
+  }).join('');
+
+  // by category
+  const catTotals = {};
+  products.forEach(p=>{
+    const cat = p.category||'Other';
+    catTotals[cat] = (catTotals[cat]||0) + (parseFloat(p.price)||0);
+  });
+  const catMax = Math.max(...Object.values(catTotals),1);
+  const catRows = Object.entries(catTotals).map(([cat,val])=>`
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:13px;font-weight:600">${cat}</span>
+        <span style="font-family:var(--font-mono);font-size:13px">${currency}${val.toFixed(0)}</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${(val/catMax*100).toFixed(1)}%;background:${CAT_TONE[cat]||'var(--hair-2)'}"></div></div>
+    </div>`).join('') || `<div style="color:var(--mute);font-size:13px">No spending data.</div>`;
+
+  const catSpendCards = CATS.map(c=>{
+    const sp = catSpend(c.id);
+    return `<div class="cat-spend-tile">
+      ${catAvatar(c,'md')}
+      <div style="font-family:var(--font-display);font-style:italic;font-size:15px;margin-top:6px;color:${c.deep}">${c.name}</div>
+      <div class="cat-spend-amt" style="color:${c.deep}">${currency}${sp.toFixed(0)}</div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="page-header">
+    <div class="page-kicker">${fmtMonthYear(now)}</div>
+    <h1 class="page-title">Where the money <em>actually</em> goes.</h1>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">This month</div>
+      <div class="bignum-sm">${currency}${spend.toFixed(0)}</div>
+      <div class="kpi-delta">from purchase events</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Per cat (products)</div>
+      <div class="bignum-sm">${currency}${perCat.toFixed(0)}</div>
+      <div class="kpi-delta">avg across 4 cats</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Year to date</div>
+      <div class="bignum-sm">${currency}${yrTotal.toFixed(0)}</div>
+      <div class="kpi-delta">${now.getFullYear()}</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="card">
+      <div class="card-h"><h3>Six months</h3></div>
+      <div class="bar-chart">${barCols}</div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>By category</h3></div>
+      ${catRows}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-h"><h3>By cat</h3></div>
+    <div class="cat-spend-grid">${catSpendCards}</div>
+  </div>`;
+};
+
+// ---- VET ----
+views.vet = function() {
+  const cards = CATS.map(cat => {
+    const notes = (vet[cat.id]||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const noteHtml = notes.map(n=>`
+      <div class="vet-note">
+        <div class="vet-note-date">${fmtDate(n.date)}</div>
+        <div class="vet-note-title">${n.title}</div>
+        <div class="vet-note-body">${n.body||''}</div>
+        ${n.vet?`<div class="vet-note-vet">Dr. ${n.vet}</div>`:''}
+      </div>`).join('');
+    return `<div class="vet-card">
+      <div class="vet-card-head">
+        ${catAvatar(cat,'md')}
+        <div>
+          <div style="font-family:var(--font-display);font-style:italic;font-size:18px;color:${cat.deep}">${cat.name}</div>
+          <div style="font-size:12px;color:var(--mute)">${cat.breed} · ${cat.age} · ${cat.weight}</div>
         </div>
-      `;
+        <div style="margin-left:auto"><span class="notes-count">${notes.length} note${notes.length===1?'':'s'}</span></div>
+      </div>
+      ${noteHtml || `<div style="color:var(--mute);font-size:13px;padding:4px 0">No notes yet.</div>`}
+      <button class="add-stub" data-open-form="vet,${cat.id}" style="margin-top:8px">+ Add visit / note</button>
+    </div>`;
+  }).join('');
+  return `
+  <div class="page-header">
+    <div class="page-kicker">Health</div>
+    <h1 class="page-title">Vet notes &amp; <em>reminders.</em></h1>
+    <div class="page-actions">
+      <button class="btn btn-primary" data-open-form="vet,macson">+ Add visit</button>
+    </div>
+  </div>
+  <div class="vet-grid">${cards}</div>`;
+};
+
+// ===== CAT DRAWER =====
+function openCatDrawer(catId) {
+  const cat = catMap[catId]; if(!cat) return;
+  const catProds = products.filter(p=>(p.cats||[]).includes(catId));
+  const catShop  = shopping.filter(s=>(s.for||[]).includes(catId)&&!s.done);
+  const catVet   = (vet[catId]||[]).slice().sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const sp = catSpend(catId);
+  const nextVet = catVet[0] ? fmtDate(catVet[0].date) : 'None logged';
+
+  const prodRows = catProds.map(p=>{
+    const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
+    const pu = calcPerUnit(p.packAmount,p.packUnit,p.price,currency);
+    return `<div class="drawer-prod">
+      <div class="drawer-prod-thumb ph" style="--tone:${tone};font-size:8px;align-items:flex-end;padding:2px 4px">${p.category||''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="drawer-prod-name">${p.name}</div>
+        <div class="drawer-prod-sub">${p.brand||''} · ${pu}</div>
+      </div>
+      ${stockBadge(p.stock)}
+    </div>`;
+  }).join('') || `<div style="color:var(--mute);font-size:13px">No products assigned.</div>`;
+
+  const shopRows = catShop.map(s=>`
+    <div class="drawer-prod">
+      <div style="flex:1"><div class="drawer-prod-name">${s.name}</div><div class="drawer-prod-sub">${s.size||''} · ${s.store||''}</div></div>
+      <div style="font-family:var(--font-mono);font-size:12px">${s.est?currency+parseFloat(s.est).toFixed(0):''}</div>
+    </div>`).join('');
+
+  const vetRows = catVet.slice(0,5).map(n=>`
+    <div class="vet-note">
+      <div class="vet-note-date">${fmtDate(n.date)}</div>
+      <div class="vet-note-title">${n.title}</div>
+      <div class="vet-note-body">${n.body||''}</div>
+      ${n.vet?`<div class="vet-note-vet">Dr. ${n.vet}</div>`:''}
+    </div>`).join('');
+
+  const el = document.getElementById('cat-drawer');
+  el.innerHTML = `
+    <button class="drawer-close" id="cat-drawer-close">✕</button>
+    <div class="drawer-hero" style="background:linear-gradient(160deg,${cat.color},${cat.deep})">
+      <div class="vibe-tag">${cat.vibe}</div>
+      <div class="drawer-name">${cat.name}</div>
+      <div class="drawer-breed">${cat.breed}</div>
+      <div class="drawer-stats">
+        <div class="drawer-stat"><div class="drawer-stat-label">This month</div><div class="drawer-stat-val">${currency}${sp.toFixed(0)}</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-label">Products</div><div class="drawer-stat-val">${catProds.length}</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-label">Favorites</div><div class="drawer-stat-val">${catProds.filter(p=>p.rating==='love').length}</div></div>
+        <div class="drawer-stat"><div class="drawer-stat-label">Last vet</div><div class="drawer-stat-val">${nextVet}</div></div>
+      </div>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section">
+        <div class="drawer-section-title">Pantry</div>
+        ${prodRows}
+      </div>
+      ${catShop.length ? `<div class="drawer-section"><div class="drawer-section-title">Shopping</div>${shopRows}</div>` : ''}
+      <div class="drawer-section">
+        <div class="drawer-section-title">Vet notes</div>
+        ${vetRows || `<div style="color:var(--mute);font-size:13px">No visits logged.</div>`}
+        <button class="add-stub" data-open-form="vet,${catId}" style="margin-top:8px">+ Add visit</button>
+      </div>
+    </div>`;
+  openDrawer('cat-drawer');
+  document.getElementById('cat-drawer-close').onclick = () => closeDrawers();
+}
+
+// ===== FORM DRAWER =====
+function openForm(type, arg) {
+  const el = document.getElementById('form-drawer');
+
+  if (type==='product') {
+    const isNew = arg==='new';
+    const prod = isNew ? { id:uid(), category:'Food', name:'', brand:'', packAmount:'', packUnit:'g', price:'', store:'', stock:'', rating:'', cats:[], note:'', tone:'', updatedDate:new Date().toISOString() } : products.find(p=>p.id===arg);
+    if (!prod) return;
+
+    const catSeg = ['Food','Litter','Treats','Supplements'].map(c=>`<button class="seg-btn${prod.category===c?' active':''}" data-prod-cat="${c}">${c}</button>`).join('');
+    const catToggles = CATS.map(c=>`<button class="cat-toggle${(prod.cats||[]).includes(c.id)?' active':''}" style="${(prod.cats||[]).includes(c.id)?'background:'+c.color+';border-color:'+c.color+';color:#fff':''}" data-cat-tog="${c.id}">${catPip(c.id)} ${c.name}</button>`).join('');
+    const pu = calcPerUnit(prod.packAmount,prod.packUnit,prod.price,currency);
+    const ratingBtns = [['love','😻'],['ok','😐'],['meh','😾']].map(([r,e])=>`<button class="rating-btn${prod.rating===r?' active':''}" data-rating="${r}">${e}</button>`).join('');
+
+    el.innerHTML = `
+      <div class="form-header">
+        <div class="form-title">${isNew?'New product':'Edit product'}</div>
+        <button class="form-close" id="form-close">✕</button>
+      </div>
+      <div class="form-body">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <div class="seg" id="prod-cat-seg">${catSeg}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input form-input-lg" id="f-name" value="${escHtml(prod.name)}" placeholder="Product name" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Brand</label>
+          <input class="form-input" id="f-brand" value="${escHtml(prod.brand||'')}" placeholder="Brand (optional)"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pack size</label>
+          <div style="display:flex;gap:8px">
+            <input class="form-input" id="f-amount" type="number" min="0" style="flex:1" value="${prod.packAmount||''}" placeholder="e.g. 85"/>
+            <div class="seg" id="unit-seg">
+              <button class="seg-btn${prod.packUnit==='g'?' active':''}" data-unit="g">g</button>
+              <button class="seg-btn${prod.packUnit==='kg'?' active':''}" data-unit="kg">kg</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Total price</label>
+          <input class="form-input" id="f-price" type="number" min="0" step="0.01" value="${prod.price||''}" placeholder="0.00"/>
+          <div class="per-unit-display" id="per-unit-disp">${pu}</div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Store</label>
+            <input class="form-input" id="f-store" value="${escHtml(prod.store||'')}" placeholder="Store name"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stock count</label>
+            <input class="form-input" id="f-stock" type="number" min="0" value="${prod.stock||''}" placeholder="0"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rating</label>
+          <div class="rating-btns" id="rating-btns">${ratingBtns}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">For cats</label>
+          <div class="cat-toggle-row" id="cat-toggles">${catToggles}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note</label>
+          <textarea class="form-input" id="f-note" rows="3" placeholder="Any notes...">${escHtml(prod.note||'')}</textarea>
+        </div>
+      </div>
+      <div class="form-footer">
+        ${!isNew ? `<button class="btn btn-warn" id="f-delete">Delete</button>` : ''}
+        <button class="btn btn-ghost" id="form-cancel">Cancel</button>
+        <button class="btn btn-primary" id="f-save">Save product</button>
+      </div>`;
+
+    // State for form
+    let fState = { ...prod, cats: [...(prod.cats||[])] };
+
+    // Category seg
+    el.querySelectorAll('[data-prod-cat]').forEach(btn => btn.onclick = () => {
+      fState.category = btn.dataset.prodCat;
+      el.querySelectorAll('[data-prod-cat]').forEach(b=>b.classList.toggle('active',b.dataset.prodCat===fState.category));
     });
+
+    // Unit seg
+    el.querySelectorAll('[data-unit]').forEach(btn => btn.onclick = () => {
+      fState.packUnit = btn.dataset.unit;
+      el.querySelectorAll('[data-unit]').forEach(b=>b.classList.toggle('active',b.dataset.unit===fState.packUnit));
+      updatePerUnit();
+    });
+
+    function updatePerUnit() {
+      const amt = document.getElementById('f-amount')?.value;
+      const price = document.getElementById('f-price')?.value;
+      const pu2 = calcPerUnit(amt, fState.packUnit, price, currency);
+      const d = document.getElementById('per-unit-disp');
+      if(d) d.textContent = pu2;
+    }
+    el.querySelector('#f-amount')?.addEventListener('input', updatePerUnit);
+    el.querySelector('#f-price')?.addEventListener('input', updatePerUnit);
+
+    // Rating
+    el.querySelectorAll('[data-rating]').forEach(btn => btn.onclick = () => {
+      fState.rating = fState.rating===btn.dataset.rating ? '' : btn.dataset.rating;
+      el.querySelectorAll('[data-rating]').forEach(b=>b.classList.toggle('active',b.dataset.rating===fState.rating));
+    });
+
+    // Cat toggles
+    el.querySelectorAll('[data-cat-tog]').forEach(btn => btn.onclick = () => {
+      const cid = btn.dataset.catTog;
+      const cat = catMap[cid];
+      if (fState.cats.includes(cid)) {
+        fState.cats = fState.cats.filter(x=>x!==cid);
+        btn.classList.remove('active');
+        btn.style.background=''; btn.style.borderColor=''; btn.style.color='';
+      } else {
+        fState.cats.push(cid);
+        btn.classList.add('active');
+        btn.style.background=cat.color; btn.style.borderColor=cat.color; btn.style.color='#fff';
+      }
+    });
+
+    // Save
+    el.querySelector('#f-save').onclick = () => {
+      const name = document.getElementById('f-name').value.trim();
+      if (!name) { document.getElementById('f-name').focus(); return; }
+      const amt = document.getElementById('f-amount').value;
+      const price = document.getElementById('f-price').value;
+      const obj = {
+        ...fState,
+        name,
+        brand: document.getElementById('f-brand').value.trim(),
+        packAmount: parseFloat(amt)||0,
+        packUnit: fState.packUnit,
+        packSize: `${amt||''} ${fState.packUnit}`.trim(),
+        price: parseFloat(price)||0,
+        perUnit: calcPerUnit(amt, fState.packUnit, price, currency),
+        store: document.getElementById('f-store').value.trim(),
+        stock: parseInt(document.getElementById('f-stock').value)||0,
+        note: document.getElementById('f-note').value.trim(),
+        tone: CAT_TONE[fState.category]||'#D9CFB6',
+        updatedDate: new Date().toISOString(),
+      };
+      if (isNew) { products.push(obj); }
+      else { const idx=products.findIndex(p=>p.id===arg); if(idx>=0) products[idx]=obj; }
+      saveData(); closeDrawers(); render();
+    };
+
+    // Delete
+    if (!isNew) {
+      el.querySelector('#f-delete').onclick = () => {
+        if (confirm(`Delete "${prod.name}"?`)) {
+          products = products.filter(p=>p.id!==arg);
+          saveData(); closeDrawers(); render();
+        }
+      };
+    }
   }
 
-  html += `</div>`;
-  return html;
+  else if (type==='shopping') {
+    const isNew = arg==='new';
+    const item = isNew ? { id:uid(), name:'', size:'', store:'', est:'', priority:'soon', for:[], done:false } : shopping.find(s=>s.id===arg);
+    if (!item) return;
+
+    const catToggles = CATS.map(c=>`<button class="cat-toggle${(item.for||[]).includes(c.id)?' active':''}" style="${(item.for||[]).includes(c.id)?'background:'+c.color+';border-color:'+c.color+';color:#fff':''}" data-cat-tog="${c.id}">${catPip(c.id)} ${c.name}</button>`).join('');
+    const prioSeg = ['urgent','soon','watch'].map(p=>`<button class="seg-btn${item.priority===p?' active':''}" data-prio="${p}" style="text-transform:capitalize">${p}</button>`).join('');
+
+    el.innerHTML = `
+      <div class="form-header">
+        <div class="form-title">${isNew?'Add item':'Edit item'}</div>
+        <button class="form-close" id="form-close">✕</button>
+      </div>
+      <div class="form-body">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input form-input-lg" id="sf-name" value="${escHtml(item.name)}" placeholder="Item name" required/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Size / Variant</label>
+            <input class="form-input" id="sf-size" value="${escHtml(item.size||'')}" placeholder="e.g. 85g × 24"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Store</label>
+            <input class="form-input" id="sf-store" value="${escHtml(item.store||'')}" placeholder="Store name"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estimated price</label>
+          <input class="form-input" id="sf-est" type="number" min="0" step="0.01" value="${item.est||''}" placeholder="0.00"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Priority</label>
+          <div class="seg" id="prio-seg">${prioSeg}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">For cats</label>
+          <div class="cat-toggle-row">${catToggles}</div>
+        </div>
+      </div>
+      <div class="form-footer">
+        ${!isNew ? `<button class="btn btn-warn" id="sf-delete">Delete</button>` : ''}
+        <button class="btn btn-ghost" id="form-cancel">Cancel</button>
+        <button class="btn btn-primary" id="sf-save">Save item</button>
+      </div>`;
+
+    let fState = { ...item, for: [...(item.for||[])], priority: item.priority||'soon' };
+
+    el.querySelectorAll('[data-prio]').forEach(btn => btn.onclick = () => {
+      fState.priority = btn.dataset.prio;
+      el.querySelectorAll('[data-prio]').forEach(b=>b.classList.toggle('active',b.dataset.prio===fState.priority));
+    });
+
+    el.querySelectorAll('[data-cat-tog]').forEach(btn => btn.onclick = () => {
+      const cid = btn.dataset.catTog;
+      const cat = catMap[cid];
+      if (fState.for.includes(cid)) {
+        fState.for = fState.for.filter(x=>x!==cid);
+        btn.classList.remove('active');
+        btn.style.background=''; btn.style.borderColor=''; btn.style.color='';
+      } else {
+        fState.for.push(cid);
+        btn.classList.add('active');
+        btn.style.background=cat.color; btn.style.borderColor=cat.color; btn.style.color='#fff';
+      }
+    });
+
+    el.querySelector('#sf-save').onclick = () => {
+      const name = document.getElementById('sf-name').value.trim();
+      if (!name) { document.getElementById('sf-name').focus(); return; }
+      const obj = { ...fState, name, size: document.getElementById('sf-size').value.trim(), store: document.getElementById('sf-store').value.trim(), est: parseFloat(document.getElementById('sf-est').value)||'' };
+      if (isNew) { shopping.push(obj); }
+      else { const idx=shopping.findIndex(s=>s.id===arg); if(idx>=0) shopping[idx]=obj; }
+      saveData(); closeDrawers(); render();
+    };
+
+    if (!isNew) {
+      el.querySelector('#sf-delete').onclick = () => {
+        if (confirm(`Remove "${item.name}"?`)) {
+          shopping = shopping.filter(s=>s.id!==arg);
+          saveData(); closeDrawers(); render();
+        }
+      };
+    }
+  }
+
+  else if (type==='vet') {
+    const catId = arg;
+    const cat = catMap[catId];
+    const catSel = CATS.map(c=>`<option value="${c.id}"${c.id===catId?' selected':''}>${c.name}</option>`).join('');
+    el.innerHTML = `
+      <div class="form-header">
+        <div class="form-title">Add vet visit</div>
+        <button class="form-close" id="form-close">✕</button>
+      </div>
+      <div class="form-body">
+        <div class="form-group">
+          <label class="form-label">Cat</label>
+          <select class="form-input" id="vf-cat">${catSel}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" id="vf-date" type="date" value="${new Date().toISOString().split('T')[0]}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input form-input-lg" id="vf-title" placeholder="e.g. Annual checkup" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-input" id="vf-body" rows="4" placeholder="What happened, observations, medications..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vet name</label>
+          <input class="form-input" id="vf-vet" placeholder="Dr. Smith"/>
+        </div>
+      </div>
+      <div class="form-footer">
+        <button class="btn btn-ghost" id="form-cancel">Cancel</button>
+        <button class="btn btn-primary" id="vf-save">Save visit</button>
+      </div>`;
+
+    el.querySelector('#vf-save').onclick = () => {
+      const title = document.getElementById('vf-title').value.trim();
+      const body  = document.getElementById('vf-body').value.trim();
+      if (!title || !body) { if(!title) document.getElementById('vf-title').focus(); else document.getElementById('vf-body').focus(); return; }
+      const cid = document.getElementById('vf-cat').value;
+      const note = { id:uid(), date:document.getElementById('vf-date').value, title, body, vet: document.getElementById('vf-vet').value.trim() };
+      if (!vet[cid]) vet[cid] = [];
+      vet[cid].push(note);
+      saveData(); closeDrawers(); render();
+    };
+  }
+
+  else if (type==='event') {
+    const catSel = `<option value="">— any cat —</option>` + CATS.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    const kindSel = ['purchase','vet','refill','other'].map(k=>`<option value="${k}" style="text-transform:capitalize">${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('');
+
+    const isEdit = arg && arg !== 'new';
+    const ev = isEdit ? calendar.find(e=>e.id===arg) : null;
+
+    el.innerHTML = `
+      <div class="form-header">
+        <div class="form-title">${isEdit?'Edit event':'New event'}</div>
+        <button class="form-close" id="form-close">✕</button>
+      </div>
+      <div class="form-body">
+        <div class="form-group">
+          <label class="form-label">Date</label>
+          <input class="form-input" id="ef-date" type="date" value="${ev?.date||new Date().toISOString().split('T')[0]}"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Kind</label>
+            <select class="form-input" id="ef-kind">${kindSel}</select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cat (optional)</label>
+            <select class="form-input" id="ef-cat">${catSel}</select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input form-input-lg" id="ef-title" value="${ev?.title||''}" placeholder="Event title" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Detail</label>
+          <textarea class="form-input" id="ef-detail" rows="3" placeholder="Notes, amount spent ($X), etc.">${ev?.detail||''}</textarea>
+        </div>
+      </div>
+      <div class="form-footer">
+        ${isEdit?`<button class="btn btn-warn" id="ef-delete">Delete</button>`:''}
+        <button class="btn btn-ghost" id="form-cancel">Cancel</button>
+        <button class="btn btn-primary" id="ef-save">${isEdit?'Save':'Add event'}</button>
+      </div>`;
+
+    if (ev) {
+      document.getElementById('ef-kind').value = ev.kind||'purchase';
+      if (ev.catId) document.getElementById('ef-cat').value = ev.catId;
+    }
+
+    el.querySelector('#ef-save').onclick = () => {
+      const title = document.getElementById('ef-title').value.trim();
+      if (!title) { document.getElementById('ef-title').focus(); return; }
+      const obj = { id: ev?.id||uid(), date: document.getElementById('ef-date').value, kind: document.getElementById('ef-kind').value, catId: document.getElementById('ef-cat').value||null, title, detail: document.getElementById('ef-detail').value.trim() };
+      if (isEdit) { const idx=calendar.findIndex(e=>e.id===arg); if(idx>=0) calendar[idx]=obj; }
+      else { calendar.push(obj); }
+      saveData(); closeDrawers(); render();
+    };
+
+    if (isEdit) {
+      el.querySelector('#ef-delete').onclick = () => {
+        if (confirm(`Delete "${ev.title}"?`)) {
+          calendar = calendar.filter(e=>e.id!==arg);
+          saveData(); closeDrawers(); render();
+        }
+      };
+    }
+  }
+
+  openDrawer('form-drawer');
+  document.getElementById('form-close').onclick = closeDrawers;
+  document.getElementById('form-cancel').onclick = closeDrawers;
 }
 
-function toggleCheck(id, e) {
-  e.stopPropagation();
-  if (checkedIds.has(id)) checkedIds.delete(id);
-  else checkedIds.add(id);
-  render();
-}
-
-// ===== FILTER =====
-function setFilterCat(cat) {
-  filterCat = cat;
-  render();
-}
-
-function togglePetFilter(petName) {
-  filterPet = filterPet === petName ? 'All' : petName;
-  render();
-}
-
-// ===== DRAWER =====
+// ===== DRAWER MANAGEMENT =====
 function openDrawer(id) {
-  editingId = id;
-  drawerOpen = true;
-
-  const hero = document.getElementById('drawer-hero');
-  const label = document.getElementById('drawer-hero-label');
-  const deleteBtn = document.getElementById('delete-btn');
-
-  // Determine hero color
-  let heroColor = '#4A413A';
-  if (id !== null) {
-    const p = products.find(x => x.id === id);
-    if (p) {
-      heroColor = getCategoryColor(p.category);
-      label.textContent = p.category || 'Product';
-    }
-  } else {
-    label.textContent = 'New Product';
-    heroColor = '#4A413A';
-  }
-  hero.style.background = `linear-gradient(135deg, ${heroColor}dd, ${heroColor}99)`;
-
-  deleteBtn.style.display = id !== null ? 'block' : 'none';
-
-  renderDrawerForm(id);
-
-  document.getElementById('backdrop').classList.add('visible');
-  document.getElementById('drawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById(id).classList.add('open');
+  // stagger if both could be open
+  if (id==='form-drawer') document.getElementById('cat-drawer').classList.remove('open');
+  if (id==='cat-drawer') document.getElementById('form-drawer').classList.remove('open');
+}
+function closeDrawers() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('cat-drawer').classList.remove('open');
+  document.getElementById('form-drawer').classList.remove('open');
 }
 
-function closeDrawer() {
-  drawerOpen = false;
-  editingId = null;
-  document.getElementById('backdrop').classList.remove('visible');
-  document.getElementById('drawer').classList.remove('open');
-}
+// ===== BIND VIEW EVENTS =====
+function bindViewEvents() {
+  const ci = document.getElementById('content-inner');
 
-function renderDrawerForm(id) {
-  const p = id !== null ? products.find(x => x.id === id) : null;
-  const def = p || {
-    name: '', category: 'Food', unit: 'g', amount: '', price: '',
-    date: todayISO(), store: '', stock: '', rating: '', forCats: [], notes: ''
-  };
-
-  const body = document.getElementById('drawer-body');
-
-  body.innerHTML = `
-    <div class="form-group">
-      <label>Product Name</label>
-      <input class="input-name" type="text" id="f-name" value="${escAttr(def.name)}" placeholder="e.g. Wellness CORE Chicken" autocomplete="off" />
-    </div>
-
-    <div class="form-group">
-      <label>Category</label>
-      <div class="seg" id="seg-cat">
-        ${CATEGORIES.map(c => `
-          <button class="seg-btn ${def.category === c.name ? 'active' : ''}"
-                  onclick="setDrawerCat('${c.name}')">${c.icon} ${c.name}</button>
-        `).join('')}
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Unit</label>
-      <div class="seg" id="seg-unit">
-        <button class="seg-btn ${def.unit === 'g' ? 'active' : ''}" onclick="setDrawerUnit('g')">g</button>
-        <button class="seg-btn ${def.unit === 'kg' ? 'active' : ''}" onclick="setDrawerUnit('kg')">kg</button>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Pack Size</label>
-        <input type="number" id="f-amount" value="${escAttr(String(def.amount))}" placeholder="e.g. 85" min="0" step="any" oninput="updatePriceCalc()" />
-      </div>
-      <div class="form-group">
-        <label>Total Price</label>
-        <input type="number" id="f-price" value="${escAttr(String(def.price))}" placeholder="e.g. 15.80" min="0" step="any" oninput="updatePriceCalc()" />
-      </div>
-    </div>
-
-    <div class="price-result" id="price-result">
-      <div class="price-result-label">Price per unit</div>
-      <div class="price-result-value" id="price-result-value">${calcPriceRaw(def.amount, def.price, def.unit)}</div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <label>Date Bought</label>
-        <input type="date" id="f-date" value="${escAttr(def.date || '')}" />
-      </div>
-      <div class="form-group">
-        <label>Store</label>
-        <input type="text" id="f-store" value="${escAttr(def.store || '')}" placeholder="e.g. PetCity" autocomplete="off" />
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Stock Count</label>
-      <input type="number" id="f-stock" value="${def.stock !== null && def.stock !== undefined && def.stock !== '' ? escAttr(String(def.stock)) : ''}" placeholder="e.g. 3" min="0" step="1" />
-    </div>
-
-    <div class="form-group">
-      <label>Rating</label>
-      <div class="rating-row">
-        <button class="rating-btn ${def.rating === '😻' ? 'active' : ''}" onclick="setRating('😻')">😻</button>
-        <button class="rating-btn ${def.rating === '😐' ? 'active' : ''}" onclick="setRating('😐')">😐</button>
-        <button class="rating-btn ${def.rating === '😾' ? 'active' : ''}" onclick="setRating('😾')">😾</button>
-        <button class="rating-btn ${def.rating === '' ? 'active' : ''}" onclick="setRating('')">—</button>
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>For Cats</label>
-      <div class="cat-pref-row">
-        ${CATS.map(cat => {
-          const isActive = (def.forCats || []).includes(cat.name);
-          return `
-            <button class="cat-pref-btn ${isActive ? 'active' : ''}"
-                    style="${isActive ? `color: ${cat.color}; border-color: ${cat.color}; background: ${cat.color}18;` : ''}"
-                    onclick="toggleForCat('${cat.name}')">
-              ${cat.name}
-            </button>
-          `;
-        }).join('')}
-      </div>
-    </div>
-
-    <div class="form-group">
-      <label>Notes</label>
-      <textarea id="f-notes" placeholder="Any notes about this product...">${escHtml(def.notes || '')}</textarea>
-    </div>
-  `;
-}
-
-// ===== DRAWER FIELD UPDATERS (no full re-render) =====
-function setDrawerCat(cat) {
-  document.querySelectorAll('#seg-cat .seg-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.trim().includes(cat));
+  // cat drawer triggers
+  ci.querySelectorAll('[data-cat-drawer]').forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    openCatDrawer(el.dataset.catDrawer);
   });
-  // Update hero color
-  const hero = document.getElementById('drawer-hero');
-  const heroColor = getCategoryColor(cat);
-  hero.style.background = `linear-gradient(135deg, ${heroColor}dd, ${heroColor}99)`;
-  document.getElementById('drawer-hero-label').textContent = cat;
-}
 
-function setDrawerUnit(unit) {
-  document.querySelectorAll('#seg-unit .seg-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.trim() === unit);
+  // open form triggers
+  ci.querySelectorAll('[data-open-form]').forEach(el => el.onclick = () => {
+    const [type, arg] = el.dataset.openForm.split(',');
+    openForm(type, arg);
   });
-  updatePriceCalc();
-}
 
-function updatePriceCalc() {
-  const amount = document.getElementById('f-amount')?.value || '';
-  const price = document.getElementById('f-price')?.value || '';
-  const activeUnit = document.querySelector('#seg-unit .seg-btn.active')?.textContent.trim() || 'g';
-  const resultEl = document.getElementById('price-result-value');
-  if (resultEl) {
-    resultEl.textContent = calcPriceRaw(amount, price, activeUnit);
-  }
-}
+  // edit product
+  ci.querySelectorAll('[data-edit-product]').forEach(el => el.onclick = () => openForm('product', el.dataset.editProduct));
 
-function setRating(r) {
-  document.querySelectorAll('.rating-btn').forEach(b => {
-    b.classList.toggle('active', b.textContent.trim() === (r || '—'));
+  // edit shopping
+  ci.querySelectorAll('[data-edit-shop]').forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    openForm('shopping', el.dataset.editShop);
   });
-}
 
-function toggleForCat(catName) {
-  const btn = [...document.querySelectorAll('.cat-pref-btn')].find(b => b.textContent.trim() === catName);
-  if (!btn) return;
-  const isActive = btn.classList.contains('active');
-  const cat = getCat(catName);
-  if (isActive) {
-    btn.classList.remove('active');
-    btn.style.color = '';
-    btn.style.borderColor = '';
-    btn.style.background = '';
-  } else {
-    btn.classList.add('active');
-    btn.style.color = cat.color;
-    btn.style.borderColor = cat.color;
-    btn.style.background = cat.color + '18';
-  }
-}
+  // edit event
+  ci.querySelectorAll('[data-edit-event]').forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    openForm('event', el.dataset.editEvent);
+  });
 
-// ===== SAVE / DELETE =====
-function saveProduct() {
-  const name = document.getElementById('f-name')?.value?.trim() || '';
-  if (!name) {
-    document.getElementById('f-name')?.focus();
-    return;
-  }
+  // toggle shopping item
+  ci.querySelectorAll('[data-toggle-shop]').forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    const id = el.dataset.toggleShop;
+    const item = shopping.find(s=>s.id===id);
+    if (item) { item.done = !item.done; saveData(); render(); }
+  });
 
-  const catActive = document.querySelector('#seg-cat .seg-btn.active');
-  const category = catActive ? catActive.textContent.trim().replace(/^[^\w]*/, '').trim() : 'Food';
-  // Extract text only (strip emoji)
-  const categoryClean = CATEGORIES.find(c => catActive?.textContent.includes(c.name))?.name || 'Food';
+  // pantry filters
+  ci.querySelectorAll('[data-pantry-cat]').forEach(el => el.onclick = () => {
+    window._pantryCatFilter = el.dataset.pantryCat;
+    render();
+  });
+  ci.querySelectorAll('[data-pantry-for]').forEach(el => el.onclick = () => {
+    window._pantryForFilter = el.dataset.pantryFor;
+    render();
+  });
 
-  const unitActive = document.querySelector('#seg-unit .seg-btn.active');
-  const unit = unitActive?.textContent.trim() || 'g';
+  // export csv
+  const csvBtn = document.getElementById('export-csv-btn');
+  if (csvBtn) csvBtn.onclick = exportData;
 
-  const amount = document.getElementById('f-amount')?.value || '';
-  const price = document.getElementById('f-price')?.value || '';
-  const date = document.getElementById('f-date')?.value || '';
-  const store = document.getElementById('f-store')?.value?.trim() || '';
-  const stockVal = document.getElementById('f-stock')?.value;
-  const stock = stockVal !== '' && stockVal !== undefined ? parseFloat(stockVal) : '';
-  const notes = document.getElementById('f-notes')?.value?.trim() || '';
+  const exportBtn2 = document.getElementById('export-btn2');
+  if (exportBtn2) exportBtn2.onclick = exportData;
 
-  const ratingActive = document.querySelector('.rating-btn.active');
-  const ratingText = ratingActive?.textContent.trim() || '';
-  const rating = ratingText === '—' ? '' : ratingText;
-
-  const forCats = [...document.querySelectorAll('.cat-pref-btn.active')].map(b => b.textContent.trim());
-
-  if (editingId !== null) {
-    const idx = products.findIndex(p => p.id === editingId);
-    if (idx !== -1) {
-      products[idx] = { ...products[idx], name, category: categoryClean, unit, amount, price, date, store, stock, notes, rating, forCats };
-    }
-  } else {
-    products.push({ id: nextId++, name, category: categoryClean, unit, amount, price, date, store, stock, notes, rating, forCats });
-  }
-
-  save();
-  closeDrawer();
-  render();
-}
-
-function deleteProduct() {
-  if (editingId === null) return;
-  if (!confirm('Delete this product?')) return;
-  products = products.filter(p => p.id !== editingId);
-  save();
-  closeDrawer();
-  render();
+  // cal cell click
+  ci.querySelectorAll('.cal-cell[data-date]').forEach(el => el.onclick = () => {
+    if (!el.dataset.date) return;
+    openForm('event', 'new');
+    // set the date after form opens
+    setTimeout(()=>{ const d=document.getElementById('ef-date'); if(d) d.value=el.dataset.date; },50);
+  });
 }
 
 // ===== EXPORT =====
-function exportExcel() {
-  if (typeof XLSX === 'undefined') {
-    alert('SheetJS not loaded. Check your internet connection.');
-    return;
-  }
-
-  const rows = products.map((p, i) => ({
-    '#': i + 1,
-    'Category': p.category || '',
-    'Unit': p.unit || '',
-    'Product': p.name || '',
-    'Pack Size': p.amount ? `${p.amount}${p.unit}` : '',
-    'Total Price': p.price ? `${currency}${p.price}` : '',
-    'Price/Unit': calcPrice(p),
-    'Date Bought': p.date || '',
-    'Store': p.store || '',
-    'Stock': p.stock !== '' && p.stock !== undefined ? p.stock : '',
-    'Rating': p.rating || '',
-    'For Cats': (p.forCats || []).join(', '),
-    'Notes': p.notes || '',
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(rows);
+function exportData() {
+  if (typeof XLSX === 'undefined') { alert('SheetJS not loaded.'); return; }
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Pantry');
-
-  const date = new Date().toISOString().split('T')[0];
-  XLSX.writeFile(wb, `pantry-${date}.xlsx`);
+  const prodData = products.map(p=>({
+    Name:p.name, Brand:p.brand, Category:p.category, PackSize:p.packSize,
+    Price:p.price, PerUnit:p.perUnit, Store:p.store, Stock:p.stock,
+    Rating:p.rating, Cats:(p.cats||[]).join(','), Note:p.note,
+  }));
+  const shopData = shopping.map(s=>({ Name:s.name, Size:s.size, Store:s.store, Est:s.est, Priority:s.priority, For:(s.for||[]).join(','), Done:s.done }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(prodData), 'Products');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(shopData), 'Shopping');
+  XLSX.writeFile(wb, 'pantry-export.xlsx');
 }
 
-// ===== ESCAPE HELPERS =====
+// ===== HTML ESCAPE =====
 function escHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function escAttr(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+// ===== TOPBAR SETUP =====
+function setupTopbar() {
+  // Currency selector
+  const sel = document.getElementById('currency-sel');
+  sel.value = currency;
+  sel.onchange = () => { currency = sel.value; saveData(); render(); };
+
+  // Cat pills
+  const pillsEl = document.getElementById('cat-pills');
+  pillsEl.innerHTML = CATS.map(c=>`<div class="cat-pill" style="background:${c.color}" data-cat-drawer="${c.id}" title="${c.name}">${c.initial}</div>`).join('');
+  pillsEl.querySelectorAll('[data-cat-drawer]').forEach(el => el.onclick = () => openCatDrawer(el.dataset.catDrawer));
 }
 
-// ===== KEYBOARD =====
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && drawerOpen) closeDrawer();
-});
+// ===== RAIL + MOBILE TABS =====
+function setupNav() {
+  document.querySelectorAll('.rail-item[data-view]').forEach(el => el.onclick = () => navigate(el.dataset.view));
+  document.querySelectorAll('.mob-tab[data-view]').forEach(el => el.onclick = () => navigate(el.dataset.view));
+  document.getElementById('dark-toggle').onclick = () => {
+    dark = !dark;
+    document.documentElement.classList.toggle('dark', dark);
+    document.getElementById('dark-toggle').textContent = dark ? '☀️' : '🌙';
+    saveData();
+  };
+  document.getElementById('export-btn').onclick = exportData;
+}
+
+// ===== OVERLAY CLOSE =====
+document.getElementById('overlay').onclick = closeDrawers;
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeDrawers(); });
 
 // ===== INIT =====
-load();
+loadData();
+if (dark) { document.documentElement.classList.add('dark'); document.getElementById('dark-toggle').textContent = '☀️'; }
+document.getElementById('currency-sel').value = currency;
+setupNav();
+setupTopbar();
 render();
 </script>
 </body>
