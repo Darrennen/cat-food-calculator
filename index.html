@@ -409,7 +409,8 @@ a{text-decoration:none;color:inherit}
       <div class="topbar-logo">pantry</div>
       <div class="topbar-right">
         <select id="currency-sel">
-          <option value="HK$">HK$</option>
+          <option value="RM">RM</option>
+          <option value="RM">RM</option>
           <option value="$">$</option>
           <option value="£">£</option>
           <option value="€">€</option>
@@ -465,20 +466,20 @@ let products = [];
 let shopping = [];
 let calendar = [];
 let vet = { macson:[], miumiu:[], duoduo:[], llaollao:[] };
-let currency = 'HK$';
+let currency = 'RM';
 let dark = false;
 let currentView = 'home';
 
 // ===== SEED DATA (first load only) =====
 const SEED_PRODUCTS = [
-  { id:'p1', cat:'Food',        name:'Fancy Feast Tuna',           brand:'Fancy Feast',    packAmount:'85',  packUnit:'g',  price:'1.85', perUnit:'HK$2.18 /100g', store:'PetSmart',          stock:8,  rating:'love', cats:['miumiu','duoduo'],                        note:"Backbone of Mi's dinner rotation.",       tone:'#E89A6E', updatedDate:'May 18' },
-  { id:'p2', cat:'Food',        name:'Orijen Original Dry',        brand:'Orijen',         packAmount:'5.4', packUnit:'kg', price:'64.99',perUnit:'HK$12.04 /kg',  store:'Chewy',             stock:1,  rating:'ok',   cats:['macson','llaollao'],                      note:'Macson eats slow; lasts ~5 weeks.',        tone:'#7B95B0', updatedDate:'Apr 30' },
-  { id:'p3', cat:'Litter',      name:"World's Best Clumping",      brand:"World's Best",   packAmount:'14',  packUnit:'kg', price:'28.50',perUnit:'HK$2.04 /kg',   store:'Target',            stock:0,  rating:'love', cats:['macson','miumiu','duoduo','llaollao'],    note:'Low dust — worth the price.',             tone:'#9A8EB8', updatedDate:'May 12' },
-  { id:'p4', cat:'Treats',      name:'Churu Tuna Sticks',          brand:'Inaba',          packAmount:'14',  packUnit:'g',  price:'4.99', perUnit:'HK$8.91 /100g', store:'Amazon',            stock:12, rating:'love', cats:['miumiu','duoduo','llaollao'],             note:'Universal language.',                     tone:'#D87A6E', updatedDate:'May 20' },
-  { id:'p5', cat:'Supplements', name:'Vetri Lysine',               brand:'Vetri',          packAmount:'120', packUnit:'g',  price:'22.40',perUnit:'HK$18.67 /100g',store:'Chewy',             stock:2,  rating:'ok',   cats:['macson'],                                 note:"For Macson's seasonal flare-ups.",        tone:'#B7B47A', updatedDate:'May 02' },
-  { id:'p6', cat:'Food',        name:'Tiki Cat Luau Pouch',        brand:'Tiki Cat',       packAmount:'80',  packUnit:'g',  price:'2.20', perUnit:'HK$2.75 /100g', store:'Pet Food Express',  stock:5,  rating:'love', cats:['llaollao'],                               note:"L's only confirmed favourite wet food.",  tone:'#8AA77B', updatedDate:'May 17' },
-  { id:'p7', cat:'Food',        name:'Stella & Chewy Freeze-Dried',brand:'Stella & Chewy', packAmount:'14',  packUnit:'kg', price:'38.00',perUnit:'HK$2.71 /kg',   store:'Petco',             stock:1,  rating:'love', cats:['duoduo'],                                 note:'Duoduo dance commences when bag opens.',  tone:'#D9A05A', updatedDate:'May 14' },
-  { id:'p8', cat:'Litter',      name:'Tofu Litter (Pine)',         brand:'Pidan',          packAmount:'7',   packUnit:'kg', price:'18.00',perUnit:'HK$2.57 /kg',   store:'Amazon',            stock:3,  rating:'ok',   cats:['macson','miumiu','duoduo','llaollao'],    note:'Backup when WB is out of stock.',         tone:'#C7B891', updatedDate:'May 05' },
+  { id:'p1', cat:'Food',        name:'Fancy Feast Tuna',           brand:'Fancy Feast',    packAmount:'85',  packUnit:'g',  price:'1.85', perUnit:'RM2.18 /100g', store:'PetSmart',          stock:8,  rating:'love', cats:['miumiu','duoduo'],                        note:"Backbone of Mi's dinner rotation.",       tone:'#E89A6E', updatedDate:'May 18' },
+  { id:'p2', cat:'Food',        name:'Orijen Original Dry',        brand:'Orijen',         packAmount:'5.4', packUnit:'kg', price:'64.99',perUnit:'RM12.04 /kg',  store:'Chewy',             stock:1,  rating:'ok',   cats:['macson','llaollao'],                      note:'Macson eats slow; lasts ~5 weeks.',        tone:'#7B95B0', updatedDate:'Apr 30' },
+  { id:'p3', cat:'Litter',      name:"World's Best Clumping",      brand:"World's Best",   packAmount:'14',  packUnit:'kg', price:'28.50',perUnit:'RM2.04 /kg',   store:'Target',            stock:0,  rating:'love', cats:['macson','miumiu','duoduo','llaollao'],    note:'Low dust — worth the price.',             tone:'#9A8EB8', updatedDate:'May 12' },
+  { id:'p4', cat:'Treats',      name:'Churu Tuna Sticks',          brand:'Inaba',          packAmount:'14',  packUnit:'g',  price:'4.99', perUnit:'RM8.91 /100g', store:'Amazon',            stock:12, rating:'love', cats:['miumiu','duoduo','llaollao'],             note:'Universal language.',                     tone:'#D87A6E', updatedDate:'May 20' },
+  { id:'p5', cat:'Supplements', name:'Vetri Lysine',               brand:'Vetri',          packAmount:'120', packUnit:'g',  price:'22.40',perUnit:'RM18.67 /100g',store:'Chewy',             stock:2,  rating:'ok',   cats:['macson'],                                 note:"For Macson's seasonal flare-ups.",        tone:'#B7B47A', updatedDate:'May 02' },
+  { id:'p6', cat:'Food',        name:'Tiki Cat Luau Pouch',        brand:'Tiki Cat',       packAmount:'80',  packUnit:'g',  price:'2.20', perUnit:'RM2.75 /100g', store:'Pet Food Express',  stock:5,  rating:'love', cats:['llaollao'],                               note:"L's only confirmed favourite wet food.",  tone:'#8AA77B', updatedDate:'May 17' },
+  { id:'p7', cat:'Food',        name:'Stella & Chewy Freeze-Dried',brand:'Stella & Chewy', packAmount:'14',  packUnit:'kg', price:'38.00',perUnit:'RM2.71 /kg',   store:'Petco',             stock:1,  rating:'love', cats:['duoduo'],                                 note:'Duoduo dance commences when bag opens.',  tone:'#D9A05A', updatedDate:'May 14' },
+  { id:'p8', cat:'Litter',      name:'Tofu Litter (Pine)',         brand:'Pidan',          packAmount:'7',   packUnit:'kg', price:'18.00',perUnit:'RM2.57 /kg',   store:'Amazon',            stock:3,  rating:'ok',   cats:['macson','miumiu','duoduo','llaollao'],    note:'Backup when WB is out of stock.',         tone:'#C7B891', updatedDate:'May 05' },
 ];
 const SEED_SHOPPING = [
   { id:'s1', name:"World's Best Clumping Litter", size:'14 lb',  for:['macson','miumiu','duoduo','llaollao'], priority:'urgent', store:'Target',  est:28.50, done:false },
@@ -488,13 +489,13 @@ const SEED_SHOPPING = [
   { id:'s5', name:'Churu Tuna multipack',         size:'×20',    for:['miumiu','duoduo','llaollao'],           priority:'watch',  store:'Amazon',  est:14.99, done:true  },
 ];
 const SEED_CALENDAR = [
-  { id:'c1', date:'2026-05-22', kind:'purchase', catId:null,      title:'Tiki Cat ×4 pouches',        detail:'Pet Food Express · HK$8.80' },
-  { id:'c2', date:'2026-05-20', kind:'purchase', catId:null,      title:'Churu Tuna multipack',        detail:'Amazon · HK$14.99' },
+  { id:'c1', date:'2026-05-22', kind:'purchase', catId:null,      title:'Tiki Cat ×4 pouches',        detail:'Pet Food Express · RM8.80' },
+  { id:'c2', date:'2026-05-20', kind:'purchase', catId:null,      title:'Churu Tuna multipack',        detail:'Amazon · RM14.99' },
   { id:'c3', date:'2026-05-18', kind:'vet',      catId:'macson',  title:'Macson · dental check',       detail:'Dr. Yamada · 12:30pm' },
-  { id:'c4', date:'2026-05-14', kind:'purchase', catId:null,      title:'Stella & Chewy 14oz',         detail:'Petco · HK$38.00' },
+  { id:'c4', date:'2026-05-14', kind:'purchase', catId:null,      title:'Stella & Chewy 14oz',         detail:'Petco · RM38.00' },
   { id:'c5', date:'2026-05-12', kind:'refill',   catId:null,      title:'Litter refill due',           detail:"World's Best · 14 lb" },
   { id:'c6', date:'2026-05-07', kind:'vet',      catId:'miumiu',  title:'Miumiu · vaccine',            detail:'Dr. Yamada · 09:00am' },
-  { id:'c7', date:'2026-05-02', kind:'purchase', catId:null,      title:'Vetri Lysine 120g',           detail:'Chewy · HK$22.40' },
+  { id:'c7', date:'2026-05-02', kind:'purchase', catId:null,      title:'Vetri Lysine 120g',           detail:'Chewy · RM22.40' },
 ];
 const SEED_VET = {
   macson:   [
@@ -521,7 +522,7 @@ function loadData() {
   try { shopping  = JSON.parse(localStorage.getItem('pantry_shopping') || '[]'); } catch(e){ shopping=[]; }
   try { calendar  = JSON.parse(localStorage.getItem('pantry_calendar') || '[]'); } catch(e){ calendar=[]; }
   try { vet       = JSON.parse(localStorage.getItem('pantry_vet') || 'null') || { macson:[], miumiu:[], duoduo:[], llaollao:[] }; } catch(e){ vet={ macson:[], miumiu:[], duoduo:[], llaollao:[] }; }
-  currency = localStorage.getItem('pantry_currency') || 'HK$';
+  currency = localStorage.getItem('pantry_currency') || 'RM';
   dark = localStorage.getItem('pantry_dark') === 'true';
   // Seed on first load
   if (!localStorage.getItem('pantry_seeded_v2')) {
