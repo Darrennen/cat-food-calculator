@@ -604,16 +604,31 @@ function loadData() {
   CATS.forEach(c => { catMap[c.id] = c; });
 }
 function saveData() {
-  localStorage.setItem('pantry_products', JSON.stringify(products));
-  localStorage.setItem('pantry_shopping', JSON.stringify(shopping));
-  localStorage.setItem('pantry_calendar', JSON.stringify(calendar));
-  localStorage.setItem('pantry_vet', JSON.stringify(vet));
-  localStorage.setItem('pantry_meds', JSON.stringify(meds));
-  localStorage.setItem('pantry_currency', currency);
-  localStorage.setItem('pantry_dark', String(dark));
+  try {
+    localStorage.setItem('pantry_products', JSON.stringify(products));
+    localStorage.setItem('pantry_shopping', JSON.stringify(shopping));
+    localStorage.setItem('pantry_calendar', JSON.stringify(calendar));
+    localStorage.setItem('pantry_vet', JSON.stringify(vet));
+    localStorage.setItem('pantry_meds', JSON.stringify(meds));
+    localStorage.setItem('pantry_currency', currency);
+    localStorage.setItem('pantry_dark', String(dark));
+  } catch(e) {
+    console.warn('saveData quota error', e);
+  }
 }
 function saveCats() {
-  localStorage.setItem('pantry_cats', JSON.stringify(CATS));
+  // Strip photoOriginal (full-res source image) before writing — iPhone photos
+  // can be 3-8 MB as base64, easily overflowing the 5 MB localStorage limit.
+  // The cropped 512×512 photo is saved; photoOriginal lives only in memory.
+  const toSave = CATS.map(c => {
+    const { photoOriginal, ...rest } = c;
+    return rest;
+  });
+  try {
+    localStorage.setItem('pantry_cats', JSON.stringify(toSave));
+  } catch(e) {
+    showToast('Storage full — photo saved this session only. Remove a photo to free space.');
+  }
 }
 
 // ===== HELPERS =====

@@ -1,5 +1,5 @@
 // Pantry service worker — offline-first for the shell.
-const CACHE = 'pantry-v1';
+const CACHE = 'pantry-v3';
 const ASSETS = [
   '/',
   '/index.html',
