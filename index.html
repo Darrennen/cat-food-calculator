@@ -605,6 +605,7 @@ let meds = [];
 let weights = { macson:[], miumiu:[], duoduo:[], llaollao:[] };
 let feedSchedule = []; // [{ id, catId, label, food, portion, note, order }]
 let feedLog = {};      // { date:'YYYY-MM-DD', done:{ [mealId]: true } }
+let budget = 0;        // monthly budget cap (0 = not set)
 let currency = 'RM';
 let dark = false;
 let currentView = 'home';
@@ -623,6 +624,7 @@ function loadData() {
     const raw = JSON.parse(localStorage.getItem('pantry_feedlog') || 'null');
     feedLog = (raw && raw.date === today) ? raw : { date: today, done: {} };
   } catch(e){ feedLog = { date: new Date().toISOString().split('T')[0], done: {} }; }
+  budget   = parseFloat(localStorage.getItem('pantry_budget')) || 0;
   currency = localStorage.getItem('pantry_currency') || 'RM';
   dark = localStorage.getItem('pantry_dark') === 'true';
   // Merge saved cat profile edits onto hardcoded defaults (skip empty fields so defaults survive)
@@ -650,6 +652,7 @@ function saveData() {
     localStorage.setItem('pantry_weights', JSON.stringify(weights));
     localStorage.setItem('pantry_feedschedule', JSON.stringify(feedSchedule));
     localStorage.setItem('pantry_feedlog', JSON.stringify(feedLog));
+    localStorage.setItem('pantry_budget', String(budget));
     localStorage.setItem('pantry_currency', currency);
     localStorage.setItem('pantry_dark', String(dark));
   } catch(e) {
@@ -1158,6 +1161,14 @@ views.home = function() {
 
   <div class="cat-tiles">${catTilesHtml}</div>
 
+  ${budget > 0 && spend / budget >= 0.8 ? `<div style="margin-bottom:16px;padding:12px 16px;border-radius:var(--r-md);background:${spend>budget?'#F9E8E4':'#FEF3E2'};border:1px solid ${spend>budget?'#EDAEA0':'#F7D5A0'};display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div>
+      <div style="font-size:13px;font-weight:700;color:${spend>budget?'var(--warn)':'#B85C00'}">${spend>budget?'Over budget':'Budget alert'}</div>
+      <div style="font-size:12px;color:${spend>budget?'var(--warn)':'#B85C00'};margin-top:1px">${spend>budget?`${currency}${(spend-budget).toFixed(0)} over your ${currency}${budget.toFixed(0)} limit`:`${currency}${(budget-spend).toFixed(0)} left of ${currency}${budget.toFixed(0)} · ${Math.round(spend/budget*100)}% used`}</div>
+    </div>
+    <button class="btn btn-ghost" style="font-size:12px;flex-shrink:0" onclick="navigate('spend')">View spend</button>
+  </div>` : ''}
+
   <div class="dash-grid">
     <div class="card span2">
       <div class="card-h">
@@ -1543,11 +1554,46 @@ views.spend = function() {
     </div>`;
   }).join('');
 
+  const budgetSet = budget > 0;
+  const budgetPct = budgetSet ? Math.min(Math.round(spend / budget * 100), 100) : 0;
+  const budgetOver = budgetSet && spend > budget;
+  const budgetWarn = budgetSet && !budgetOver && spend / budget >= 0.8;
+  const budgetColor = budgetOver ? 'var(--warn)' : budgetWarn ? '#E07A2F' : 'var(--ink)';
+  const remaining = budgetSet ? budget - spend : 0;
+
+  const budgetBlock = budgetSet ? `
+  <div class="card" style="margin-bottom:16px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px">
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--mute);margin-bottom:4px">Monthly budget</div>
+        <div style="font-family:var(--font-display);font-size:32px;line-height:1;color:${budgetColor}">
+          ${currency}${spend.toFixed(0)}<span style="font-size:16px;color:var(--mute);margin-left:4px">/ ${currency}${budget.toFixed(0)}</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--mute);margin-bottom:4px">${budgetOver ? 'Over by' : 'Remaining'}</div>
+        <div style="font-family:var(--font-display);font-size:32px;line-height:1;color:${budgetColor}">${currency}${Math.abs(remaining).toFixed(0)}</div>
+      </div>
+    </div>
+    <div style="height:10px;background:var(--cream-2);border-radius:5px;overflow:hidden">
+      <div style="height:100%;width:${budgetPct}%;background:${budgetColor};border-radius:5px;transition:width 0.4s"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:6px">
+      <span style="font-size:11px;font-weight:600;color:${budgetColor}">${budgetOver?'⚠ Over budget':budgetWarn?'⚠ Almost there':'On track'} · ${budgetPct}% used</span>
+      <button class="btn btn-ghost" style="font-size:11px;padding:2px 8px" onclick="navigate('settings')">Edit budget</button>
+    </div>
+  </div>` : `
+  <div style="margin-bottom:16px;padding:12px 16px;border:1px dashed var(--hair);border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between">
+    <span style="font-size:13px;color:var(--mute)">No monthly budget set</span>
+    <button class="btn btn-ghost" style="font-size:12px" onclick="navigate('settings')">Set budget</button>
+  </div>`;
+
   return `
   <div class="page-header">
     <div class="page-kicker">${fmtMonthYear(now)}</div>
     <h1 class="page-title">Where the money <em>actually</em> goes.</h1>
   </div>
+  ${budgetBlock}
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-label">This month</div>
@@ -1908,6 +1954,12 @@ views.settings = function() {
           <button class="seg-btn${!dark?' active':''}" data-theme="light">Light</button>
           <button class="seg-btn${dark?' active':''}" data-theme="dark">Dark</button>
         </div>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:4px">
+      <div class="form-group">
+        <label class="form-label">Monthly budget (${currency})</label>
+        <input class="form-input" id="settings-budget" type="number" min="0" step="1" value="${budget || ''}" placeholder="e.g. 500 — leave blank to disable"/>
       </div>
     </div>
   </div>
@@ -2849,6 +2901,14 @@ function bindSettingsEvents(ci) {
     curSel.value = currency;
     curSel.onchange = () => { currency = curSel.value; document.getElementById('currency-sel').value = currency; saveData(); render(); };
   }
+  // budget input
+  const budgetInput = document.getElementById('settings-budget');
+  if (budgetInput) budgetInput.onchange = () => {
+    budget = parseFloat(budgetInput.value) || 0;
+    saveData();
+    showToast(budget > 0 ? `Budget set to ${currency}${budget.toFixed(0)}/month` : 'Budget cleared');
+  };
+
   // theme toggle
   ci.querySelectorAll('[data-theme]').forEach(btn => btn.onclick = () => {
     dark = btn.dataset.theme === 'dark';
