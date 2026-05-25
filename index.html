@@ -389,6 +389,35 @@ a{text-decoration:none;color:inherit}
 .search-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
 .search-row .form-input{flex:1;min-width:200px;padding:8px 12px;font-size:13px}
 
+/* ===== PHOTO CROPPER ===== */
+#crop-overlay{
+  position:fixed;inset:0;background:rgba(20,18,16,0.92);z-index:1000;display:none;
+  align-items:center;justify-content:center;flex-direction:column;padding:20px;
+  -webkit-user-select:none;user-select:none;
+}
+#crop-overlay.open{display:flex}
+.crop-frame{
+  width:min(320px,80vw);height:min(320px,80vw);border-radius:50%;
+  overflow:hidden;position:relative;background:#000;
+  box-shadow:0 0 0 9999px rgba(0,0,0,0.55);
+  touch-action:none;cursor:grab;
+}
+.crop-frame:active{cursor:grabbing}
+.crop-frame img{
+  position:absolute;left:0;top:0;transform-origin:0 0;
+  pointer-events:none;-webkit-user-drag:none;max-width:none;
+}
+.crop-zoom-row{display:flex;align-items:center;gap:12px;margin-top:24px;width:min(320px,80vw)}
+.crop-zoom-row input[type=range]{flex:1;accent-color:#fff}
+.crop-zoom-row span{color:#fff;font-family:var(--font-mono);font-size:12px;min-width:40px;text-align:right}
+.crop-actions{display:flex;gap:10px;margin-top:18px}
+.crop-actions button{
+  padding:10px 22px;border-radius:10px;font-size:14px;font-weight:600;border:none;cursor:pointer;
+}
+.crop-cancel{background:rgba(255,255,255,0.12);color:#fff}
+.crop-save{background:#fff;color:var(--ink)}
+.crop-hint{color:rgba(255,255,255,0.55);font-size:12px;margin-top:14px;text-align:center}
+
 /* ===== MOBILE ===== */
 @media(max-width:768px){
   #rail{display:none}
@@ -509,6 +538,24 @@ a{text-decoration:none;color:inherit}
 <div id="cat-drawer" class="drawer"></div>
 <div id="form-drawer" class="drawer"></div>
 
+<!-- Photo cropper overlay -->
+<div id="crop-overlay">
+  <div style="color:#fff;font-family:var(--font-display);font-style:italic;font-size:22px;margin-bottom:18px" id="crop-title">Crop photo</div>
+  <div class="crop-frame" id="crop-frame">
+    <img id="crop-img" alt=""/>
+  </div>
+  <div class="crop-zoom-row">
+    <span>Zoom</span>
+    <input type="range" id="crop-zoom" min="1" max="4" step="0.01" value="1"/>
+    <span id="crop-zoom-val">1.00×</span>
+  </div>
+  <div class="crop-actions">
+    <button class="crop-cancel" id="crop-cancel">Cancel</button>
+    <button class="crop-save" id="crop-save">Use photo</button>
+  </div>
+  <div class="crop-hint">Drag to position · pinch or use slider to zoom</div>
+</div>
+
 <script>
 // ===== CATS =====
 const CATS = [
@@ -621,6 +668,173 @@ function quickRestock(productId) {
   });
   saveData(); render();
   showToast(`${p.name} added to shopping list`);
+}
+
+// ===== PHOTO CROPPER =====
+// Lightweight circular cropper: drag to pan, slider/pinch to zoom, exports 512x512 JPEG.
+const cropper = {
+  overlay: null, frame: null, img: null, zoomEl: null, zoomVal: null,
+  imgW: 0, imgH: 0, frameSize: 0,
+  scale: 1, minScale: 1, maxScale: 4,
+  tx: 0, ty: 0,
+  dragging: false, lastX: 0, lastY: 0,
+  pinchStart: 0, pinchScaleStart: 1,
+  onSave: null,
+
+  init() {
+    this.overlay = document.getElementById('crop-overlay');
+    this.frame = document.getElementById('crop-frame');
+    this.img = document.getElementById('crop-img');
+    this.zoomEl = document.getElementById('crop-zoom');
+    this.zoomVal = document.getElementById('crop-zoom-val');
+
+    document.getElementById('crop-cancel').onclick = () => this.close();
+    document.getElementById('crop-save').onclick = () => this.save();
+
+    this.zoomEl.oninput = () => {
+      // zoom around frame centre
+      const cx = this.frameSize / 2, cy = this.frameSize / 2;
+      const newScale = this.minScale * parseFloat(this.zoomEl.value);
+      this.zoomTo(newScale, cx, cy);
+    };
+
+    // pointer events (works for mouse + touch on modern browsers)
+    this.frame.addEventListener('pointerdown', (e) => {
+      this.frame.setPointerCapture(e.pointerId);
+      this.dragging = true;
+      this.lastX = e.clientX; this.lastY = e.clientY;
+    });
+    this.frame.addEventListener('pointermove', (e) => {
+      if (!this.dragging) return;
+      this.tx += e.clientX - this.lastX;
+      this.ty += e.clientY - this.lastY;
+      this.lastX = e.clientX; this.lastY = e.clientY;
+      this.clamp(); this.apply();
+    });
+    const endDrag = (e) => {
+      this.dragging = false;
+      try { this.frame.releasePointerCapture(e.pointerId); } catch(_){}
+    };
+    this.frame.addEventListener('pointerup', endDrag);
+    this.frame.addEventListener('pointercancel', endDrag);
+
+    // pinch zoom on touch
+    let touchStartDist = 0, touchStartScale = 1;
+    this.frame.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        touchStartDist = Math.hypot(dx, dy);
+        touchStartScale = this.scale;
+      }
+    });
+    this.frame.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        if (touchStartDist > 0) {
+          const newScale = touchStartScale * (dist / touchStartDist);
+          this.zoomTo(newScale, this.frameSize/2, this.frameSize/2);
+          this.zoomEl.value = (this.scale / this.minScale).toFixed(2);
+          this.zoomVal.textContent = (this.scale / this.minScale).toFixed(2) + '×';
+        }
+      }
+    }, { passive: false });
+
+    // wheel zoom on desktop
+    this.frame.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = -e.deltaY * 0.002;
+      const newScale = this.scale * (1 + delta);
+      const rect = this.frame.getBoundingClientRect();
+      this.zoomTo(newScale, e.clientX - rect.left, e.clientY - rect.top);
+      this.zoomEl.value = (this.scale / this.minScale).toFixed(2);
+      this.zoomVal.textContent = (this.scale / this.minScale).toFixed(2) + '×';
+    }, { passive: false });
+  },
+
+  open(dataUrl, onSave) {
+    if (!this.overlay) this.init();
+    this.onSave = onSave;
+    const tempImg = new Image();
+    tempImg.onload = () => {
+      this.imgW = tempImg.naturalWidth;
+      this.imgH = tempImg.naturalHeight;
+      this.img.src = dataUrl;
+      this.frameSize = this.frame.clientWidth;
+      // initial scale: cover the frame
+      this.minScale = Math.max(this.frameSize / this.imgW, this.frameSize / this.imgH);
+      this.scale = this.minScale;
+      // centre the image
+      this.tx = (this.frameSize - this.imgW * this.scale) / 2;
+      this.ty = (this.frameSize - this.imgH * this.scale) / 2;
+      this.zoomEl.value = 1;
+      this.zoomVal.textContent = '1.00×';
+      this.apply();
+      this.overlay.classList.add('open');
+    };
+    tempImg.src = dataUrl;
+  },
+
+  close() {
+    this.overlay.classList.remove('open');
+    this.img.src = '';
+    this.onSave = null;
+  },
+
+  zoomTo(newScale, focalX, focalY) {
+    newScale = Math.max(this.minScale, Math.min(this.maxScale * this.minScale, newScale));
+    // keep focal point under cursor
+    const ratio = newScale / this.scale;
+    this.tx = focalX - (focalX - this.tx) * ratio;
+    this.ty = focalY - (focalY - this.ty) * ratio;
+    this.scale = newScale;
+    this.clamp(); this.apply();
+  },
+
+  clamp() {
+    // keep image covering frame
+    const w = this.imgW * this.scale, h = this.imgH * this.scale;
+    this.tx = Math.min(0, Math.max(this.frameSize - w, this.tx));
+    this.ty = Math.min(0, Math.max(this.frameSize - h, this.ty));
+  },
+
+  apply() {
+    this.img.style.width = this.imgW + 'px';
+    this.img.style.height = this.imgH + 'px';
+    this.img.style.transform = `translate(${this.tx}px, ${this.ty}px) scale(${this.scale})`;
+  },
+
+  save() {
+    const out = 512;
+    const canvas = document.createElement('canvas');
+    canvas.width = out; canvas.height = out;
+    const ctx = canvas.getContext('2d');
+    // The visible 0..frameSize × 0..frameSize area of the transformed image is what we want.
+    // Source rect on natural image: sx = -tx/scale, sy = -ty/scale, sw/sh = frameSize/scale
+    const sx = -this.tx / this.scale;
+    const sy = -this.ty / this.scale;
+    const sw = this.frameSize / this.scale;
+    const sh = this.frameSize / this.scale;
+    const tmp = new Image();
+    tmp.onload = () => {
+      ctx.drawImage(tmp, sx, sy, sw, sh, 0, 0, out, out);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const cb = this.onSave;
+      this.close();
+      if (cb) cb(dataUrl);
+    };
+    tmp.src = this.img.src;
+  },
+};
+
+function openCropper(dataUrl, cid, onSave) {
+  const cat = catMap[cid];
+  const title = document.getElementById('crop-title');
+  if (title) title.textContent = cat ? `Crop ${cat.name}'s photo` : 'Crop photo';
+  cropper.open(dataUrl, onSave);
 }
 
 function catPip(catId) {
@@ -2264,17 +2478,19 @@ function bindSettingsEvents(ci) {
     const cid = input.dataset.catPhoto;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const c = catMap[cid]; if (!c) return;
-      c.photo = ev.target.result;
-      saveCats();
-      // refresh just this card's preview
-      const prev = document.querySelector(`[data-photo-preview="${cid}"]`);
-      if (prev) prev.innerHTML = `<img src="${c.photo}" alt=""/>`;
-      // re-render topbar pills
-      setupTopbar();
-      showToast(`Photo updated for ${c.name}`);
+      openCropper(ev.target.result, cid, (croppedDataUrl) => {
+        const c = catMap[cid]; if (!c) return;
+        c.photo = croppedDataUrl;
+        saveCats();
+        const prev = document.querySelector(`[data-photo-preview="${cid}"]`);
+        if (prev) prev.innerHTML = `<img src="${c.photo}" alt=""/>`;
+        setupTopbar();
+        showToast(`Photo updated for ${c.name}`);
+      });
     };
     reader.readAsDataURL(file);
+    // reset input so picking the same file twice fires onchange
+    input.value = '';
   });
   ci.querySelectorAll('[data-photo-clear]').forEach(btn => btn.onclick = () => {
     const c = catMap[btn.dataset.photoClear]; if (!c) return;
