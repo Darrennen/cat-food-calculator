@@ -910,6 +910,17 @@ function stockBadge(stock) {
   return `<span class="stock-badge">${n}</span>`;
 }
 
+function expiryStatus(expiry) {
+  if (!expiry) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exp = new Date(expiry); exp.setHours(0,0,0,0);
+  const days = Math.round((exp - today) / 86400000);
+  if (days < 0)  return { days, label: 'Expired',         color: 'var(--warn)',  bg: '#F9E8E4' };
+  if (days <= 7) return { days, label: `${days}d left`,   color: '#C25A3A',      bg: '#F9E8E4' };
+  if (days <= 30) return { days, label: `${days}d left`,  color: '#E07A2F',      bg: '#FEF3E2' };
+  return { days, label: `${days}d left`, color: 'var(--mute)', bg: 'transparent' };
+}
+
 function productThumbnail(tone, label, cls='') {
   return `<div class="ph ${cls}" style="--tone:${tone||'#D9CFB6'}">${label||''}</div>`;
 }
@@ -1090,6 +1101,23 @@ views.home = function() {
     </div>`;
   }).join('');
 
+  // expiring soon (within 30 days or already expired)
+  const expiring = products
+    .map(p => ({ p, exp: expiryStatus(p.expiry) }))
+    .filter(({exp}) => exp && exp.days <= 30)
+    .sort((a,b) => a.exp.days - b.exp.days);
+  const expiringHtml = expiring.slice(0,4).map(({p, exp})=>{
+    const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
+    return `<div class="low-row">
+      <div class="low-thumb ph" style="width:36px;height:36px;border-radius:8px;--tone:${tone};font-size:8px;align-items:flex-end;padding:3px 4px">${p.category||''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="low-name">${p.name}</div>
+        <div class="low-sub">${p.brand||''}</div>
+      </div>
+      <span style="font-size:11px;font-family:var(--font-mono);font-weight:700;color:${exp.color};flex-shrink:0">${exp.label === 'Expired' ? 'Expired' : exp.label}</span>
+    </div>`;
+  }).join('');
+
   // running low
   const lowHtml = low.slice(0,4).map(p=>{
     const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
@@ -1199,6 +1227,13 @@ views.home = function() {
         </div>
         ${lowHtml || `<div style="color:var(--mute);font-size:13px;padding:8px 0">All stocked up!</div>`}
       </div>
+      ${expiring.length ? `<div class="card">
+        <div class="card-h">
+          <h3>Expiring soon</h3>
+          <span class="badge" style="background:#F9E8E4;color:var(--warn)">${expiring.length}</span>
+        </div>
+        ${expiringHtml}
+      </div>` : ''}
       ${feedSchedule.length ? `<div class="card">
         <div class="card-h">
           <h3>Today's meals</h3>
@@ -1338,6 +1373,7 @@ function renderPantryCards(list) {
     const stock = parseInt(p.stock)||0;
     const stockColor = stock === 0 ? 'var(--warn)' : stock <= 1 ? '#E07A2F' : 'var(--ink-2)';
     const stockLabel = stock === 0 ? 'Out' : `${stock} left`;
+    const exp = expiryStatus(p.expiry);
     return `<div class="product-card" data-edit-product="${p.id}">
       ${productThumbnail(tone, p.category)}
       <div class="product-card-body">
@@ -1345,6 +1381,7 @@ function renderPantryCards(list) {
         <div class="product-card-sub">${[p.packSize,pu].filter(Boolean).join(' · ')}</div>
         <div class="product-card-pips">${(p.cats||[]).map(catPip).join('')}</div>
       </div>
+      ${exp && exp.days <= 30 ? `<div style="padding:3px 10px 0;font-size:10px;font-family:var(--font-mono);font-weight:700;color:${exp.color};background:${exp.bg}">${exp.label === 'Expired' ? '✕ Expired' : '⏰ Exp ' + exp.label}</div>` : ''}
       <div class="product-card-footer">
         <span style="font-size:11px;font-family:var(--font-mono);font-weight:600;color:${stockColor}">${stockLabel}</span>
         <div class="stock-ctrl">
@@ -2117,6 +2154,10 @@ function openForm(type, arg) {
           <div class="cat-toggle-row" id="cat-toggles">${catToggles}</div>
         </div>
         <div class="form-group">
+          <label class="form-label">Expiry date <span style="color:var(--mute);font-weight:400">(optional)</span></label>
+          <input class="form-input" id="f-expiry" type="date" value="${prod.expiry||''}"/>
+        </div>
+        <div class="form-group">
           <label class="form-label">Note</label>
           <textarea class="form-input" id="f-note" rows="3" placeholder="Any notes...">${escHtml(prod.note||'')}</textarea>
         </div>
@@ -2191,6 +2232,7 @@ function openForm(type, arg) {
         perUnit: calcPerUnit(amt, fState.packUnit, price, currency),
         store: document.getElementById('f-store').value.trim(),
         stock: parseInt(document.getElementById('f-stock').value)||0,
+        expiry: document.getElementById('f-expiry').value || '',
         note: document.getElementById('f-note').value.trim(),
         tone: CAT_TONE[fState.category]||'#D9CFB6',
         updatedDate: new Date().toISOString(),
