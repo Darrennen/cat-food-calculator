@@ -1638,6 +1638,7 @@ views.settings = function() {
       <div class="settings-photo-row">
         <input type="file" accept="image/*" id="photo-${cat.id}" style="display:none" data-cat-photo="${cat.id}"/>
         <button class="btn btn-ghost" style="font-size:12px" data-photo-pick="${cat.id}">Upload photo</button>
+        ${cat.photo ? `<button class="btn btn-ghost" style="font-size:12px" data-photo-edit="${cat.id}">Edit photo</button>` : ''}
         ${cat.photo ? `<button class="btn btn-ghost" style="font-size:12px;color:var(--warn)" data-photo-clear="${cat.id}">Remove photo</button>` : ''}
       </div>
       <div class="form-row">
@@ -2478,23 +2479,53 @@ function bindSettingsEvents(ci) {
     const cid = input.dataset.catPhoto;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      openCropper(ev.target.result, cid, (croppedDataUrl) => {
+      const source = ev.target.result;
+      openCropper(source, cid, (croppedDataUrl) => {
         const c = catMap[cid]; if (!c) return;
         c.photo = croppedDataUrl;
+        c.photoOriginal = source; // keep full-res source for future re-crop
         saveCats();
         const prev = document.querySelector(`[data-photo-preview="${cid}"]`);
         if (prev) prev.innerHTML = `<img src="${c.photo}" alt=""/>`;
         setupTopbar();
         showToast(`Photo updated for ${c.name}`);
+        // re-render to surface the "Edit photo" button now that photo exists
+        if (!ci.querySelector(`[data-photo-edit="${cid}"]`)) render();
       });
     };
     reader.readAsDataURL(file);
-    // reset input so picking the same file twice fires onchange
-    input.value = '';
+    input.value = ''; // allow re-picking same file
   });
+
+  // edit existing photo — re-open the cropper using the saved original (or current photo as fallback)
+  ci.querySelectorAll('[data-photo-edit]').forEach(btn => btn.onclick = () => {
+    const cid = btn.dataset.photoEdit;
+    const c = catMap[cid]; if (!c || !c.photo) return;
+    const source = c.photoOriginal || c.photo;
+    // if source is a /cats/{id}.jpg URL (the bundled default), fetch + convert to dataURL first
+    const start = (src) => openCropper(src, cid, (croppedDataUrl) => {
+      c.photo = croppedDataUrl;
+      saveCats();
+      const prev = document.querySelector(`[data-photo-preview="${cid}"]`);
+      if (prev) prev.innerHTML = `<img src="${c.photo}" alt=""/>`;
+      setupTopbar();
+      showToast(`Photo updated for ${c.name}`);
+    });
+    if (source.startsWith('data:')) {
+      start(source);
+    } else {
+      fetch(source).then(r => r.blob()).then(blob => {
+        const reader = new FileReader();
+        reader.onload = () => start(reader.result);
+        reader.readAsDataURL(blob);
+      }).catch(() => start(source));
+    }
+  });
+
   ci.querySelectorAll('[data-photo-clear]').forEach(btn => btn.onclick = () => {
     const c = catMap[btn.dataset.photoClear]; if (!c) return;
     c.photo = '';
+    c.photoOriginal = '';
     saveCats(); setupTopbar(); render();
   });
 
