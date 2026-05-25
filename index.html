@@ -321,6 +321,18 @@ a{text-decoration:none;color:inherit}
 .cat-toggle.active{color:#fff}
 
 /* ===== VET CARD ===== */
+.feed-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.feed-card{border-radius:var(--r-lg);border:1px solid var(--hair);background:var(--paper);padding:20px;box-shadow:var(--shadow-soft)}
+.feed-card-head{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--hair)}
+.meal-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--hair)}
+.meal-row:last-of-type{border-bottom:none}
+.meal-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--hair);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.15s}
+.meal-check.done{border-color:currentColor;background:currentColor}
+.meal-check.done svg{stroke:#fff}
+.meal-info{flex:1;min-width:0}
+.meal-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mute);margin-bottom:1px}
+.meal-food{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meal-portion{font-size:11px;color:var(--mute)}
 .vet-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .vet-card{border-radius:var(--r-lg);border:1px solid var(--hair);background:var(--paper);padding:20px;box-shadow:var(--shadow-soft)}
 .vet-card-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--hair)}
@@ -442,7 +454,7 @@ a{text-decoration:none;color:inherit}
   .mob-tab span{font-size:9px;font-weight:700;text-transform:uppercase}
   #content{padding:16px 14px 80px}
   .cat-tiles{grid-template-columns:1fr 1fr}
-  .dash-grid,.dash-grid-2,.vet-grid,.cat-spend-grid,.kpi-row{grid-template-columns:1fr}
+  .dash-grid,.dash-grid-2,.vet-grid,.feed-grid,.cat-spend-grid,.kpi-row{grid-template-columns:1fr}
   .product-grid{grid-template-columns:repeat(2,1fr)}
   .product-grid-3{grid-template-columns:1fr 1fr}
   .drawer{width:100vw;max-width:none}
@@ -483,6 +495,10 @@ a{text-decoration:none;color:inherit}
     <button class="rail-item" data-view="spend">
       <svg viewBox="0 0 24 24"><path d="M4 20V6M10 20V10M16 20V13M22 20H2"/></svg>
       <span>Spend</span>
+    </button>
+    <button class="rail-item" data-view="feed">
+      <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 2v4M10 2v4M14 2v4"/></svg>
+      <span>Feed</span>
     </button>
     <button class="rail-item" data-view="vet">
       <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>
@@ -533,9 +549,9 @@ a{text-decoration:none;color:inherit}
       <svg viewBox="0 0 24 24"><path d="M3 6h2l2 12h12l2-9H6M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
       <span>Shop</span>
     </div>
-    <div class="mob-tab" data-view="meds">
-      <svg viewBox="0 0 24 24"><path d="M3.5 11.5l7-7a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM9 9l6 6"/></svg>
-      <span>Meds</span>
+    <div class="mob-tab" data-view="feed">
+      <svg viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 2v4M10 2v4M14 2v4"/></svg>
+      <span>Feed</span>
     </div>
     <div class="mob-tab" data-view="settings">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -587,6 +603,8 @@ let calendar = [];
 let vet = { macson:[], miumiu:[], duoduo:[], llaollao:[] };
 let meds = [];
 let weights = { macson:[], miumiu:[], duoduo:[], llaollao:[] };
+let feedSchedule = []; // [{ id, catId, label, food, portion, note, order }]
+let feedLog = {};      // { date:'YYYY-MM-DD', done:{ [mealId]: true } }
 let currency = 'RM';
 let dark = false;
 let currentView = 'home';
@@ -598,7 +616,13 @@ function loadData() {
   try { calendar  = JSON.parse(localStorage.getItem('pantry_calendar') || '[]'); } catch(e){ calendar=[]; }
   try { vet       = JSON.parse(localStorage.getItem('pantry_vet') || 'null') || { macson:[], miumiu:[], duoduo:[], llaollao:[] }; } catch(e){ vet={ macson:[], miumiu:[], duoduo:[], llaollao:[] }; }
   try { meds      = JSON.parse(localStorage.getItem('pantry_meds') || '[]'); } catch(e){ meds=[]; }
-  try { weights   = JSON.parse(localStorage.getItem('pantry_weights') || 'null') || { macson:[], miumiu:[], duoduo:[], llaollao:[] }; } catch(e){ weights={ macson:[], miumiu:[], duoduo:[], llaollao:[] }; }
+  try { weights      = JSON.parse(localStorage.getItem('pantry_weights') || 'null') || { macson:[], miumiu:[], duoduo:[], llaollao:[] }; } catch(e){ weights={ macson:[], miumiu:[], duoduo:[], llaollao:[] }; }
+  try { feedSchedule = JSON.parse(localStorage.getItem('pantry_feedschedule') || '[]'); } catch(e){ feedSchedule=[]; }
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const raw = JSON.parse(localStorage.getItem('pantry_feedlog') || 'null');
+    feedLog = (raw && raw.date === today) ? raw : { date: today, done: {} };
+  } catch(e){ feedLog = { date: new Date().toISOString().split('T')[0], done: {} }; }
   currency = localStorage.getItem('pantry_currency') || 'RM';
   dark = localStorage.getItem('pantry_dark') === 'true';
   // Merge saved cat profile edits onto hardcoded defaults (skip empty fields so defaults survive)
@@ -624,6 +648,8 @@ function saveData() {
     localStorage.setItem('pantry_vet', JSON.stringify(vet));
     localStorage.setItem('pantry_meds', JSON.stringify(meds));
     localStorage.setItem('pantry_weights', JSON.stringify(weights));
+    localStorage.setItem('pantry_feedschedule', JSON.stringify(feedSchedule));
+    localStorage.setItem('pantry_feedlog', JSON.stringify(feedLog));
     localStorage.setItem('pantry_currency', currency);
     localStorage.setItem('pantry_dark', String(dark));
   } catch(e) {
@@ -1089,6 +1115,22 @@ views.home = function() {
     </div>`;
   }).join('') || `<div style="color:var(--mute);font-size:13px;padding:12px 0">No events yet.</div>`;
 
+  // feeding summary for home
+  const todayFeed = new Date().toISOString().split('T')[0];
+  const todayDone = (feedLog.date === todayFeed) ? feedLog.done : {};
+  const feedRows = CATS.map(cat => {
+    const meals = feedSchedule.filter(m => m.catId === cat.id).sort((a,b)=>(a.order||0)-(b.order||0));
+    if (!meals.length) return null;
+    const pips = meals.map(m => {
+      const done = !!todayDone[m.id];
+      return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 7px;border-radius:12px;background:${done?cat.color:'var(--cream-2)'};color:${done?'#fff':'var(--mute)'};font-weight:600">${escHtml(m.label)}</span>`;
+    }).join('');
+    return `<div style="display:flex;align-items:center;gap:8px;padding:5px 0">
+      ${catPip(cat.id)}
+      <div style="display:flex;gap:4px;flex-wrap:wrap">${pips}</div>
+    </div>`;
+  }).filter(Boolean).join('');
+
   // pantry preview
   const previewProds = products.slice(0,3).map(p=>{
     const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
@@ -1146,6 +1188,13 @@ views.home = function() {
         </div>
         ${lowHtml || `<div style="color:var(--mute);font-size:13px;padding:8px 0">All stocked up!</div>`}
       </div>
+      ${feedSchedule.length ? `<div class="card">
+        <div class="card-h">
+          <h3>Today's meals</h3>
+          <button class="btn btn-ghost" style="font-size:11px;padding:3px 8px" onclick="navigate('feed')">View all</button>
+        </div>
+        ${feedRows || '<div style="color:var(--mute);font-size:13px">No meals scheduled.</div>'}
+      </div>` : ''}
     </div>
   </div>
 
@@ -1530,6 +1579,67 @@ views.spend = function() {
     <div class="card-h"><h3>By cat</h3></div>
     <div class="cat-spend-grid">${catSpendCards}</div>
   </div>`;
+};
+
+// ---- FEED ----
+views.feed = function() {
+  const today = new Date().toISOString().split('T')[0];
+  // auto-reset log if it's a new day
+  if (feedLog.date !== today) { feedLog = { date: today, done: {} }; saveData(); }
+
+  const totalMeals = feedSchedule.length;
+  const doneMeals = feedSchedule.filter(m => feedLog.done[m.id]).length;
+  const allDone = totalMeals > 0 && doneMeals === totalMeals;
+
+  const cards = CATS.map(cat => {
+    const meals = feedSchedule.filter(m => m.catId === cat.id)
+      .sort((a,b) => (a.order||0) - (b.order||0));
+    const catDone = meals.filter(m => feedLog.done[m.id]).length;
+
+    const mealRows = meals.map(m => {
+      const done = !!feedLog.done[m.id];
+      return `<div class="meal-row">
+        <div class="meal-check${done?' done':''}" style="color:${cat.color}" data-feed-toggle="${m.id}">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${done?'#fff':'transparent'}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+        </div>
+        <div class="meal-info" style="${done?'opacity:0.45':''}">
+          <div class="meal-label">${escHtml(m.label)}</div>
+          <div class="meal-food">${escHtml(m.food||'—')}</div>
+          ${m.portion?`<div class="meal-portion">${escHtml(m.portion)}</div>`:''}
+        </div>
+        <button class="btn btn-ghost" style="padding:3px 8px;font-size:11px;flex-shrink:0" data-edit-meal="${m.id}">Edit</button>
+      </div>`;
+    }).join('');
+
+    return `<div class="feed-card">
+      <div class="feed-card-head">
+        ${catAvatar(cat,'md')}
+        <div style="flex:1">
+          <div style="font-family:var(--font-display);font-style:italic;font-size:18px;color:${cat.deep}">${cat.name}</div>
+          <div style="font-size:12px;color:var(--mute)">${meals.length} meal${meals.length===1?'':'s'}${meals.length?` · ${catDone}/${meals.length} done`:'s set up'}</div>
+        </div>
+        <button class="add-stub" style="margin:0;padding:3px 10px;font-size:12px" data-open-form="meal,${cat.id}">+ Meal</button>
+      </div>
+      ${mealRows || `<div style="color:var(--mute);font-size:13px;padding:4px 0">No meals set up yet.</div>`}
+    </div>`;
+  }).join('');
+
+  const progressPct = totalMeals ? Math.round(doneMeals/totalMeals*100) : 0;
+  const dayStr = new Date().toLocaleDateString('en-GB',{weekday:'long'});
+
+  return `
+  <div class="page-header">
+    <div class="page-kicker">${dayStr}</div>
+    <h1 class="page-title">${allDone ? '<em>All fed!</em> 🐱' : "Today's <em>feeding.</em>"}</h1>
+    <div class="page-sub">${totalMeals ? `${doneMeals} of ${totalMeals} meals done today.` : 'Set up meals below to track daily feeding.'}</div>
+  </div>
+  ${totalMeals ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <div style="flex:1;height:6px;background:var(--cream-2);border-radius:3px;overflow:hidden">
+      <div style="height:100%;width:${progressPct}%;background:var(--ink);border-radius:3px;transition:width 0.3s"></div>
+    </div>
+    <div style="font-size:12px;font-family:var(--font-mono);font-weight:600;color:var(--mute)">${progressPct}%</div>
+  </div>` : ''}
+  <div class="feed-grid">${cards}</div>`;
 };
 
 // ---- VET ----
@@ -2258,6 +2368,78 @@ function openForm(type, arg) {
     });
   }
 
+  else if (type==='meal') {
+    // arg is either a catId (new meal) or a mealId (edit)
+    const isEdit = feedSchedule.some(m => m.id === arg);
+    const meal = isEdit ? feedSchedule.find(m => m.id === arg)
+      : { id: uid(), catId: arg, label: 'Morning', food: '', portion: '', note: '', order: feedSchedule.filter(m=>m.catId===arg).length };
+    const catSel = CATS.map(c=>`<option value="${c.id}"${c.id===meal.catId?' selected':''}>${c.name}</option>`).join('');
+    const labels = ['Morning','Noon','Afternoon','Evening','Night'].map(l=>`<button class="seg-btn${meal.label===l?' active':''}" data-meal-label="${l}">${l}</button>`).join('');
+    const foodOptions = products.filter(p=>p.category==='Food'||p.category==='Treats')
+      .map(p=>`<option value="${p.name}">`).join('');
+
+    el.innerHTML = `
+      <div class="form-header">
+        <div class="form-title">${isEdit?'Edit meal':'Add meal'}</div>
+        <button class="form-close" id="form-close">✕</button>
+      </div>
+      <div class="form-body">
+        <datalist id="food-list">${foodOptions}</datalist>
+        <div class="form-group">
+          <label class="form-label">Cat</label>
+          <select class="form-input" id="mf-cat">${catSel}</select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Meal time</label>
+          <div class="seg" id="meal-label-seg" style="flex-wrap:wrap">${labels}</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Food</label>
+          <input class="form-input form-input-lg" id="mf-food" list="food-list" value="${escHtml(meal.food||'')}" placeholder="e.g. Fancy Feast Tuna"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Portion</label>
+          <input class="form-input" id="mf-portion" value="${escHtml(meal.portion||'')}" placeholder="e.g. ½ pouch, 50g"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note (optional)</label>
+          <input class="form-input" id="mf-note" value="${escHtml(meal.note||'')}" placeholder="Warm up slightly, mix with water…"/>
+        </div>
+      </div>
+      <div class="form-footer">
+        ${isEdit ? `<button class="btn btn-ghost" id="mf-delete" style="color:var(--warn)">Delete</button>` : `<button class="btn btn-ghost" id="form-cancel">Cancel</button>`}
+        <button class="btn btn-primary" id="mf-save">Save meal</button>
+      </div>`;
+
+    let mealLabel = meal.label;
+    el.querySelectorAll('[data-meal-label]').forEach(btn => btn.onclick = () => {
+      mealLabel = btn.dataset.mealLabel;
+      el.querySelectorAll('[data-meal-label]').forEach(b => b.classList.toggle('active', b.dataset.mealLabel === mealLabel));
+    });
+
+    el.querySelector('#mf-save').onclick = () => {
+      const food = document.getElementById('mf-food').value.trim();
+      if (!food) { document.getElementById('mf-food').focus(); return; }
+      meal.catId   = document.getElementById('mf-cat').value;
+      meal.label   = mealLabel;
+      meal.food    = food;
+      meal.portion = document.getElementById('mf-portion').value.trim();
+      meal.note    = document.getElementById('mf-note').value.trim();
+      if (!isEdit) feedSchedule.push(meal);
+      saveData(); closeDrawers(); render();
+      showToast(isEdit ? 'Meal updated' : 'Meal added');
+    };
+
+    if (isEdit) {
+      el.querySelector('#mf-delete').onclick = () => {
+        if (!confirm('Delete this meal?')) return;
+        feedSchedule = feedSchedule.filter(m => m.id !== meal.id);
+        delete feedLog.done[meal.id];
+        saveData(); closeDrawers(); render();
+      };
+    }
+  }
+
   else if (type==='event') {
     const catSel = `<option value="">— any cat —</option>` + CATS.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
     const kindSel = ['purchase','vet','refill','other'].map(k=>`<option value="${k}" style="text-transform:capitalize">${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('');
@@ -2527,6 +2709,34 @@ function bindViewEvents() {
   ci.querySelectorAll('[data-edit-med]').forEach(el => el.onclick = e => {
     e.stopPropagation();
     openForm('medicine', el.dataset.editMed);
+  });
+
+  // feed: toggle meal done
+  ci.querySelectorAll('[data-feed-toggle]').forEach(el => el.onclick = () => {
+    const id = el.dataset.feedToggle;
+    const today = new Date().toISOString().split('T')[0];
+    if (feedLog.date !== today) feedLog = { date: today, done: {} };
+    feedLog.done[id] = !feedLog.done[id];
+    saveData();
+    // patch in-place
+    const done = feedLog.done[id];
+    const meal = feedSchedule.find(m => m.id === id);
+    const cat = meal ? catMap[meal.catId] : null;
+    el.classList.toggle('done', done);
+    el.style.color = cat ? cat.color : '';
+    el.querySelector('svg path').setAttribute('stroke', done ? '#fff' : 'transparent');
+    el.closest('.meal-row').querySelector('.meal-info').style.opacity = done ? '0.45' : '';
+    // update progress bar without full re-render
+    const total = feedSchedule.length;
+    const doneCount = feedSchedule.filter(m => feedLog.done[m.id]).length;
+    const bar = document.querySelector('#content-inner .page-header + div div[style*="background:var(--ink)"]');
+    if (bar) bar.style.width = (total ? Math.round(doneCount/total*100) : 0) + '%';
+  });
+
+  // feed: edit meal
+  ci.querySelectorAll('[data-edit-meal]').forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    openForm('meal', el.dataset.editMeal);
   });
 
   // pantry filters
