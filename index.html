@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#E9E2D0"/>
+<link rel="manifest" href="/manifest.json"/>
 <title>Pantry — Cat Product Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -346,8 +348,49 @@ a{text-decoration:none;color:inherit}
 .cat-legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink-2)}
 .cat-legend-dot{width:8px;height:8px;border-radius:50%}
 
+/* ===== EMPTY STATE ===== */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 24px;text-align:center;color:var(--mute);
+}
+.empty-emoji{font-size:48px;line-height:1;margin-bottom:14px;filter:grayscale(0.15)}
+.empty-title{font-family:var(--font-display);font-style:italic;font-size:24px;color:var(--ink);margin-bottom:6px}
+.empty-sub{font-size:13px;color:var(--mute);margin-bottom:20px;max-width:320px;line-height:1.5}
+
+/* ===== SETTINGS ===== */
+.settings-cat-card{background:var(--paper);border-radius:var(--r-lg);border:1px solid var(--hair);padding:20px;box-shadow:var(--shadow-soft);margin-bottom:14px}
+.settings-cat-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--hair)}
+.settings-photo-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.settings-photo-preview{width:64px;height:64px;border-radius:50%;background:var(--cream-2);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1px solid var(--hair)}
+.settings-photo-preview img{width:100%;height:100%;object-fit:cover}
+
+/* ===== AVATAR PHOTO ===== */
+.cat-av img,.cat-pill img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.cat-av{overflow:hidden}
+.cat-pill{overflow:hidden}
+
+/* restock btn */
+.restock-btn{padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;background:var(--cream-2);color:var(--ink-2);border:1px solid var(--hair);cursor:pointer;flex-shrink:0;transition:all 0.15s}
+.restock-btn:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+/* toast */
+#toast{
+  position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);
+  background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:var(--r-sm);
+  font-size:13px;font-weight:600;box-shadow:var(--shadow-card);
+  opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;z-index:200;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* recurring marker */
+.cal-ev .repeat-mark{font-size:9px;opacity:0.7;margin-left:2px}
+
+/* search row */
+.search-row{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.search-row .form-input{flex:1;min-width:200px;padding:8px 12px;font-size:13px}
+
 /* ===== MOBILE ===== */
-@media(max-width:700px){
+@media(max-width:768px){
   #rail{display:none}
   #mobile-tabs{
     display:flex;position:fixed;bottom:0;left:0;right:0;height:60px;
@@ -357,17 +400,24 @@ a{text-decoration:none;color:inherit}
   .mob-tab.active{color:var(--ink)}
   .mob-tab svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
   .mob-tab span{font-size:9px;font-weight:700;text-transform:uppercase}
-  #content{padding-bottom:80px}
+  #content{padding:16px 14px 80px}
   .cat-tiles{grid-template-columns:1fr 1fr}
   .dash-grid,.dash-grid-2,.vet-grid,.cat-spend-grid,.kpi-row{grid-template-columns:1fr}
   .product-grid{grid-template-columns:repeat(2,1fr)}
   .product-grid-3{grid-template-columns:1fr 1fr}
-  .drawer{width:100%;max-width:100%}
+  .drawer{width:100vw;max-width:none}
   .form-row{grid-template-columns:1fr}
-  #topbar{padding:0 16px}
-  #content{padding:16px 16px 60px}
+  #topbar{padding:0 14px}
+  .page-title{font-size:24px}
+  .page-header{margin-bottom:18px}
+  .bignum{font-size:40px}
+  .bignum-sm{font-size:26px}
+  /* split layouts → single column */
+  .shop-split,.cal-split,.meds-split,.spend-split{grid-template-columns:1fr !important}
+  .topbar-logo{font-size:18px}
+  #currency-sel{padding:4px 8px;font-size:12px}
 }
-@media(min-width:701px){#mobile-tabs{display:none}}
+@media(min-width:769px){#mobile-tabs{display:none}}
 </style>
 </head>
 <body>
@@ -401,6 +451,10 @@ a{text-decoration:none;color:inherit}
     <button class="rail-item" data-view="meds">
       <svg viewBox="0 0 24 24"><path d="M3.5 11.5l7-7a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM9 9l6 6"/></svg>
       <span>Meds</span>
+    </button>
+    <button class="rail-item" data-view="settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
     </button>
     <div class="rail-bottom">
       <button class="rail-btn" id="dark-toggle" title="Toggle dark mode">🌙</button>
@@ -439,13 +493,13 @@ a{text-decoration:none;color:inherit}
       <svg viewBox="0 0 24 24"><path d="M3 6h2l2 12h12l2-9H6M9 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM18 21a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
       <span>Shop</span>
     </div>
-    <div class="mob-tab" data-view="vet">
-      <svg viewBox="0 0 24 24"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>
-      <span>Vet</span>
-    </div>
     <div class="mob-tab" data-view="meds">
       <svg viewBox="0 0 24 24"><path d="M3.5 11.5l7-7a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7zM9 9l6 6"/></svg>
       <span>Meds</span>
+    </div>
+    <div class="mob-tab" data-view="settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
     </div>
   </div>
 </div>
@@ -487,6 +541,17 @@ function loadData() {
   try { meds      = JSON.parse(localStorage.getItem('pantry_meds') || '[]'); } catch(e){ meds=[]; }
   currency = localStorage.getItem('pantry_currency') || 'RM';
   dark = localStorage.getItem('pantry_dark') === 'true';
+  // Merge saved cat profile edits onto hardcoded defaults
+  try {
+    const savedCats = JSON.parse(localStorage.getItem('pantry_cats') || 'null');
+    if (savedCats && Array.isArray(savedCats)) {
+      savedCats.forEach(saved => {
+        const existing = CATS.find(c => c.id === saved.id);
+        if (existing) Object.assign(existing, saved);
+      });
+    }
+  } catch(e) {}
+  CATS.forEach(c => { catMap[c.id] = c; });
 }
 function saveData() {
   localStorage.setItem('pantry_products', JSON.stringify(products));
@@ -496,6 +561,9 @@ function saveData() {
   localStorage.setItem('pantry_meds', JSON.stringify(meds));
   localStorage.setItem('pantry_currency', currency);
   localStorage.setItem('pantry_dark', String(dark));
+}
+function saveCats() {
+  localStorage.setItem('pantry_cats', JSON.stringify(CATS));
 }
 
 // ===== HELPERS =====
@@ -510,7 +578,46 @@ function calcPerUnit(amount, unit, price, cur) {
 }
 
 function catAvatar(cat, size='md') {
-  return `<div class="cat-av ${size}" style="background:${cat.color}">${cat.initial}</div>`;
+  const inner = cat.photo ? `<img src="${cat.photo}" alt=""/>` : cat.initial;
+  return `<div class="cat-av ${size}" style="background:${cat.color}">${inner}</div>`;
+}
+
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function hexToRgb(hex) {
+  const h = hex.replace('#','');
+  return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+}
+function rgbToHex(r,g,b) {
+  const c = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2,'0');
+  return '#' + c(r) + c(g) + c(b);
+}
+function deriveShades(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  // soft = lighten 70%, tint = lighten 80%, deep = darken 45%
+  const soft = rgbToHex(r + (255-r)*0.7, g + (255-g)*0.7, b + (255-b)*0.7);
+  const tint = rgbToHex(r + (255-r)*0.82, g + (255-g)*0.82, b + (255-b)*0.82);
+  const deep = rgbToHex(r*0.55, g*0.55, b*0.55);
+  return { soft, tint, deep };
+}
+
+function quickRestock(productId) {
+  const p = products.find(x => x.id === productId); if (!p) return;
+  const already = shopping.find(s => !s.done && s.name === p.name);
+  if (already) { showToast(`${p.name} is already on the list`); return; }
+  shopping.push({
+    id: uid(), name: p.name, size: p.packSize || '', for: [...(p.cats||[])],
+    priority: 'soon', store: p.store || '', est: parseFloat(p.price) || '', done: false,
+  });
+  saveData(); render();
+  showToast(`${p.name} added to shopping list`);
 }
 
 function catPip(catId) {
@@ -542,6 +649,15 @@ function monthSpend() {
 }
 
 function catSpend(catId) {
+  // Sum purchase events in current month tagged to this cat
+  const now = new Date();
+  const fromCal = calendar
+    .filter(e => e.kind === 'purchase' && e.catId === catId
+      && new Date(e.date).getMonth() === now.getMonth()
+      && new Date(e.date).getFullYear() === now.getFullYear())
+    .reduce((s,e) => s + (parseFloat((e.detail||'').match(/[\d.]+/)?.[0]) || 0), 0);
+  if (fromCal > 0) return fromCal;
+  // Fallback to product price sum so empty calendar still shows something
   return products.filter(p => (p.cats||[]).includes(catId))
     .reduce((sum,p) => sum + (parseFloat(p.price)||0), 0);
 }
@@ -680,6 +796,7 @@ views.home = function() {
         <div class="low-sub">${p.brand||''}</div>
       </div>
       ${stockBadge(p.stock)}
+      <button class="restock-btn" data-restock="${p.id}" title="Add to shopping list">Restock</button>
     </div>`;
   }).join('');
 
@@ -838,7 +955,7 @@ views.shop = function() {
           <button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" data-edit-shop="${s.id}">Edit</button>
         </div>`).join('')}
       </div>` : ''}
-      ${!shopping.length ? `<div class="card" style="color:var(--mute);text-align:center;padding:40px">Nothing on the list yet.</div>` : ''}
+      ${!shopping.length ? `<div class="card"><div class="empty-state"><div class="empty-emoji">🛒</div><div class="empty-title">Nothing on the list</div><div class="empty-sub">Add items here when you're running low or planning your next pet store run.</div><button class="btn btn-primary" data-open-form="shopping,new">+ Add first item</button></div></div>` : ''}
       <button class="add-stub" data-open-form="shopping,new" style="margin-top:4px">+ Add item</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:12px">
@@ -856,23 +973,28 @@ views.shop = function() {
 };
 
 // ---- PANTRY ----
-views.pantry = function() {
-  const total = products.length;
-  const cats = ['All','Food','Litter','Treats','Supplements'];
-  let pantryCatFilter = window._pantryCatFilter || 'All';
-  let pantryForFilter = window._pantryForFilter || 'anyone';
+function filteredPantryProducts() {
+  const pantryCatFilter = window._pantryCatFilter || 'All';
+  const pantryForFilter = window._pantryForFilter || 'anyone';
+  const search = (window._pantrySearch || '').trim().toLowerCase();
+  const sort = window._pantrySort || 'updated';
 
-  const filtered = products.filter(p => {
+  let list = products.filter(p => {
     const catOk = pantryCatFilter==='All' || p.category===pantryCatFilter;
     const forOk = pantryForFilter==='anyone' || (p.cats||[]).includes(pantryForFilter);
-    return catOk && forOk;
+    const searchOk = !search || [p.name, p.brand, p.store].some(s => (s||'').toLowerCase().includes(search));
+    return catOk && forOk && searchOk;
   });
+  if (sort === 'name') list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  else if (sort === 'stock') list.sort((a,b) => (parseInt(a.stock)||0) - (parseInt(b.stock)||0));
+  else if (sort === 'price-asc') list.sort((a,b) => (parseFloat(a.price)||0) - (parseFloat(b.price)||0));
+  else if (sort === 'price-desc') list.sort((a,b) => (parseFloat(b.price)||0) - (parseFloat(a.price)||0));
+  else list.sort((a,b) => new Date(b.updatedDate||0) - new Date(a.updatedDate||0));
+  return list;
+}
 
-  const segBtns = cats.map(c=>`<button class="seg-btn${pantryCatFilter===c?' active':''}" data-pantry-cat="${c}">${c}</button>`).join('');
-  const forPills = CATS.map(c=>`<button class="filt-cat${pantryForFilter===c.id?' active':''}" style="${pantryForFilter===c.id?'background:'+c.color:''}" data-pantry-for="${c.id}">${c.name}</button>`).join('');
-  const anyonePill = `<button class="filt-cat${pantryForFilter==='anyone'?' active':''}" data-pantry-for="anyone">Anyone</button>`;
-
-  const prodCards = filtered.map(p=>{
+function renderPantryCards(list) {
+  return list.map(p => {
     const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
     const pu = calcPerUnit(p.packAmount,p.packUnit,p.price,currency);
     return `<div class="product-card" data-edit-product="${p.id}">
@@ -883,7 +1005,28 @@ views.pantry = function() {
         <div class="product-card-pips">${(p.cats||[]).map(catPip).join('')}</div>
       </div>
     </div>`;
-  }).join('') || `<div style="grid-column:1/-1;color:var(--mute);font-size:13px;padding:20px 0">No products here yet.</div>`;
+  }).join('') || `<div class="empty-state" style="grid-column:1/-1"><div class="empty-emoji">🐈</div><div class="empty-title">No products here</div><div class="empty-sub">Try adjusting the filters, or add a new product to get started.</div></div>`;
+}
+
+views.pantry = function() {
+  const total = products.length;
+  const cats = ['All','Food','Litter','Treats','Supplements'];
+  const pantryCatFilter = window._pantryCatFilter || 'All';
+  const pantryForFilter = window._pantryForFilter || 'anyone';
+  const filtered = filteredPantryProducts();
+
+  const segBtns = cats.map(c=>`<button class="seg-btn${pantryCatFilter===c?' active':''}" data-pantry-cat="${c}">${c}</button>`).join('');
+  const forPills = CATS.map(c=>`<button class="filt-cat${pantryForFilter===c.id?' active':''}" style="${pantryForFilter===c.id?'background:'+c.color:''}" data-pantry-for="${c.id}">${c.name}</button>`).join('');
+  const anyonePill = `<button class="filt-cat${pantryForFilter==='anyone'?' active':''}" data-pantry-for="anyone">Anyone</button>`;
+
+  const sortCurrent = window._pantrySort || 'updated';
+  const sortOpts = [
+    ['updated','Recently updated'],
+    ['name','Name A→Z'],
+    ['stock','Stock low→high'],
+    ['price-asc','Price low→high'],
+    ['price-desc','Price high→low'],
+  ].map(([v,l]) => `<option value="${v}"${v===sortCurrent?' selected':''}>${l}</option>`).join('');
 
   return `
   <div class="page-header">
@@ -895,6 +1038,10 @@ views.pantry = function() {
       <button class="btn btn-primary" data-open-form="product,new">+ Add product</button>
     </div>
   </div>
+  <div class="search-row">
+    <input id="pantry-search" class="form-input" type="search" placeholder="Search by name, brand, or store…" value="${escHtml(window._pantrySearch||'')}"/>
+    <select id="pantry-sort" class="form-input" style="max-width:200px;flex:0 0 auto">${sortOpts}</select>
+  </div>
   <div class="filter-row">
     <div class="seg">${segBtns}</div>
     <span class="filt-label">For</span>
@@ -902,7 +1049,7 @@ views.pantry = function() {
     ${forPills}
   </div>
   <div class="card">
-    <div class="product-grid">${prodCards}</div>
+    <div class="product-grid">${renderPantryCards(filtered)}</div>
   </div>`;
 };
 
@@ -921,15 +1068,35 @@ views.cal = function() {
   const kindColors = {purchase:'#6E8B53',vet:'#C25A3A',refill:'#6B8AAE',other:'#8C8276'};
   const kindBg    = {purchase:'#D8E9CC',vet:'#F2D0C3',refill:'#D9E4F4',other:'#E8E3DC'};
 
-  // Map events by day
+  // Map events by day (expand recurring events as virtual occurrences in current month)
   const evByDay = {};
+  const monthStart = new Date(year, month, 1);
+  const monthEnd = new Date(year, month, daysInMonth);
   calendar.forEach(e => {
-    const d = new Date(e.date);
-    if (d.getFullYear()===year && d.getMonth()===month) {
-      const day = d.getDate();
-      if (!evByDay[day]) evByDay[day] = [];
-      evByDay[day].push(e);
+    const start = new Date(e.date);
+    if (isNaN(start)) return;
+    const occurrences = [];
+    if (e.repeat === 'weekly') {
+      let d = new Date(start);
+      while (d <= monthEnd) {
+        if (d >= monthStart && d.getMonth() === month && d.getFullYear() === year) occurrences.push(new Date(d));
+        d.setDate(d.getDate() + 7);
+      }
+    } else if (e.repeat === 'monthly') {
+      const day = start.getDate();
+      const probe = new Date(year, month, day);
+      if (probe >= start && probe.getMonth() === month) occurrences.push(probe);
+    } else if (e.repeat === 'yearly') {
+      const probe = new Date(year, start.getMonth(), start.getDate());
+      if (probe >= start && probe.getMonth() === month && probe.getFullYear() === year) occurrences.push(probe);
+    } else if (start.getFullYear() === year && start.getMonth() === month) {
+      occurrences.push(start);
     }
+    occurrences.forEach(d => {
+      const dn = d.getDate();
+      if (!evByDay[dn]) evByDay[dn] = [];
+      evByDay[dn].push(e);
+    });
   });
 
   let cells = '';
@@ -942,7 +1109,7 @@ views.cal = function() {
 
     const isToday = !dim && dayNum===today;
     const evs = (!dim && evByDay[dayNum]) || [];
-    const evHtml = evs.slice(0,2).map(e=>`<div class="cal-ev" style="background:${kindBg[e.kind]||'#E8E3DC'};color:${kindColors[e.kind]||'#8C8276'}">${e.title}</div>`).join('');
+    const evHtml = evs.slice(0,2).map(e=>`<div class="cal-ev" style="background:${kindBg[e.kind]||'#E8E3DC'};color:${kindColors[e.kind]||'#8C8276'}">${e.title}${e.repeat && e.repeat!=='none' ? '<span class="repeat-mark">↻</span>' : ''}</div>`).join('');
     cells += `<div class="cal-cell${dim?' dim':''}${isToday?' today':''}" data-date="${dateStr}">
       <div class="cal-num">${dispNum}</div>
       ${evHtml}
@@ -1237,6 +1404,115 @@ views.meds = function() {
   </div>`;
 };
 
+// ---- SETTINGS ----
+views.settings = function() {
+  const catRows = CATS.map(cat => {
+    const photoHtml = cat.photo
+      ? `<img src="${cat.photo}" alt="${cat.name}"/>`
+      : `<div style="font-family:var(--font-display);font-style:italic;font-size:26px;font-weight:600;color:#fff;background:${cat.color};width:100%;height:100%;display:flex;align-items:center;justify-content:center">${cat.initial}</div>`;
+    return `<div class="settings-cat-card" data-cat-row="${cat.id}">
+      <div class="settings-cat-head">
+        <div class="settings-photo-preview" data-photo-preview="${cat.id}">${photoHtml}</div>
+        <div style="flex:1">
+          <div style="font-family:var(--font-display);font-style:italic;font-size:20px;color:${cat.deep}">${cat.name}</div>
+          <div style="font-size:12px;color:var(--mute)">${cat.breed} · ${cat.age} · ${cat.weight}</div>
+        </div>
+      </div>
+      <div class="settings-photo-row">
+        <input type="file" accept="image/*" id="photo-${cat.id}" style="display:none" data-cat-photo="${cat.id}"/>
+        <button class="btn btn-ghost" style="font-size:12px" data-photo-pick="${cat.id}">Upload photo</button>
+        ${cat.photo ? `<button class="btn btn-ghost" style="font-size:12px;color:var(--warn)" data-photo-clear="${cat.id}">Remove photo</button>` : ''}
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" data-cat-field="${cat.id}|name" value="${escHtml(cat.name)}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Initial</label>
+          <input class="form-input" data-cat-field="${cat.id}|initial" value="${escHtml(cat.initial)}" maxlength="2"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Breed</label>
+          <input class="form-input" data-cat-field="${cat.id}|breed" value="${escHtml(cat.breed||'')}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Age</label>
+          <input class="form-input" data-cat-field="${cat.id}|age" value="${escHtml(cat.age||'')}" placeholder="e.g. 4 yrs"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Weight</label>
+          <input class="form-input" data-cat-field="${cat.id}|weight" value="${escHtml(cat.weight||'')}" placeholder="e.g. 4.5 kg"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Vibe</label>
+          <input class="form-input" data-cat-field="${cat.id}|vibe" value="${escHtml(cat.vibe||'')}" placeholder="One-liner personality"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Colour</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input type="color" data-cat-field="${cat.id}|color" value="${cat.color}" style="width:48px;height:36px;border:1px solid var(--hair);border-radius:8px;cursor:pointer;background:transparent"/>
+          <input class="form-input" data-cat-field="${cat.id}|color" value="${cat.color}" style="flex:1;font-family:var(--font-mono);font-size:12px"/>
+          <button class="btn btn-ghost" style="font-size:11px" data-cat-recolor="${cat.id}">Auto-shade</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="page-header">
+    <div class="page-kicker">Settings</div>
+    <h1 class="page-title">Make it <em>yours.</em></h1>
+    <div class="page-sub">Edit cat profiles, photos, preferences, and data.</div>
+    <div class="page-actions">
+      <button class="btn btn-primary" id="settings-save">Save changes</button>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-h"><h3>Preferences</h3></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Currency</label>
+        <select class="form-input" id="settings-currency">
+          <option value="RM">RM</option>
+          <option value="HK$">HK$</option>
+          <option value="$">$</option>
+          <option value="£">£</option>
+          <option value="€">€</option>
+          <option value="¥">¥</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Theme</label>
+        <div class="seg">
+          <button class="seg-btn${!dark?' active':''}" data-theme="light">Light</button>
+          <button class="seg-btn${dark?' active':''}" data-theme="dark">Dark</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-family:var(--font-display);font-style:italic;font-weight:500;font-size:20px;margin:24px 0 12px;color:var(--ink-2)">Cat profiles</h3>
+  ${catRows}
+
+  <div class="card" style="margin-top:24px">
+    <div class="card-h"><h3>Data</h3></div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;padding:6px 0">
+      <button class="btn btn-ghost" id="settings-export">📊 Export to Excel</button>
+      <input type="file" id="settings-import-file" accept=".xlsx,.xls" style="display:none"/>
+      <button class="btn btn-ghost" id="settings-import">📥 Import from Excel</button>
+      <button class="btn btn-warn" id="settings-reset" style="margin-left:auto">🗑️ Reset all data</button>
+    </div>
+    <div style="font-size:12px;color:var(--mute);margin-top:8px">Imports merge by product name. Reset wipes localStorage and reloads the app.</div>
+  </div>`;
+};
+
 // ===== CAT DRAWER =====
 function openCatDrawer(catId) {
   const cat = catMap[catId]; if(!cat) return;
@@ -1256,6 +1532,7 @@ function openCatDrawer(catId) {
         <div class="drawer-prod-sub">${p.brand||''} · ${pu}</div>
       </div>
       ${stockBadge(p.stock)}
+      <button class="restock-btn" data-restock="${p.id}">Restock</button>
     </div>`;
   }).join('') || `<div style="color:var(--mute);font-size:13px">No products assigned.</div>`;
 
@@ -1301,6 +1578,11 @@ function openCatDrawer(catId) {
     </div>`;
   openDrawer('cat-drawer');
   document.getElementById('cat-drawer-close').onclick = () => closeDrawers();
+  // wire restock buttons inside the drawer (bindViewEvents only scans content-inner)
+  el.querySelectorAll('[data-restock]').forEach(b => b.onclick = (e) => {
+    e.stopPropagation();
+    quickRestock(b.dataset.restock);
+  });
 }
 
 // ===== FORM DRAWER =====
@@ -1447,7 +1729,20 @@ function openForm(type, arg) {
         tone: CAT_TONE[fState.category]||'#D9CFB6',
         updatedDate: new Date().toISOString(),
       };
-      if (isNew) { products.push(obj); }
+      if (isNew) {
+        products.push(obj);
+        // Auto-log a purchase calendar event so spend tracking works
+        if (obj.price > 0) {
+          calendar.push({
+            id: uid(),
+            date: new Date().toISOString().split('T')[0],
+            kind: 'purchase',
+            catId: obj.cats[0] || null,
+            title: obj.name,
+            detail: `${obj.store || 'Purchase'} · ${currency}${obj.price.toFixed(2)}`,
+          });
+        }
+      }
       else { const idx=products.findIndex(p=>p.id===arg); if(idx>=0) products[idx]=obj; }
       saveData(); closeDrawers(); render();
     };
@@ -1633,6 +1928,15 @@ function openForm(type, arg) {
           <label class="form-label">Detail</label>
           <textarea class="form-input" id="ef-detail" rows="3" placeholder="Notes, amount spent ($X), etc.">${ev?.detail||''}</textarea>
         </div>
+        <div class="form-group">
+          <label class="form-label">Repeat</label>
+          <select class="form-input" id="ef-repeat">
+            <option value="none">Never</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
       </div>
       <div class="form-footer">
         ${isEdit?`<button class="btn btn-warn" id="ef-delete">Delete</button>`:''}
@@ -1643,12 +1947,21 @@ function openForm(type, arg) {
     if (ev) {
       document.getElementById('ef-kind').value = ev.kind||'purchase';
       if (ev.catId) document.getElementById('ef-cat').value = ev.catId;
+      document.getElementById('ef-repeat').value = ev.repeat || 'none';
     }
 
     el.querySelector('#ef-save').onclick = () => {
       const title = document.getElementById('ef-title').value.trim();
       if (!title) { document.getElementById('ef-title').focus(); return; }
-      const obj = { id: ev?.id||uid(), date: document.getElementById('ef-date').value, kind: document.getElementById('ef-kind').value, catId: document.getElementById('ef-cat').value||null, title, detail: document.getElementById('ef-detail').value.trim() };
+      const obj = {
+        id: ev?.id||uid(),
+        date: document.getElementById('ef-date').value,
+        kind: document.getElementById('ef-kind').value,
+        catId: document.getElementById('ef-cat').value||null,
+        title,
+        detail: document.getElementById('ef-detail').value.trim(),
+        repeat: document.getElementById('ef-repeat').value,
+      };
       if (isEdit) { const idx=calendar.findIndex(e=>e.id===arg); if(idx>=0) calendar[idx]=obj; }
       else { calendar.push(obj); }
       saveData(); closeDrawers(); render();
@@ -1875,6 +2188,176 @@ function bindViewEvents() {
     // set the date after form opens
     setTimeout(()=>{ const d=document.getElementById('ef-date'); if(d) d.value=el.dataset.date; },50);
   });
+
+  // quick restock
+  ci.querySelectorAll('[data-restock]').forEach(el => el.onclick = e => {
+    e.stopPropagation();
+    quickRestock(el.dataset.restock);
+  });
+
+  // pantry search + sort
+  const searchInput = document.getElementById('pantry-search');
+  if (searchInput) searchInput.oninput = (e) => {
+    window._pantrySearch = e.target.value;
+    // targeted re-render: just the grid
+    const grid = document.querySelector('.product-grid');
+    if (grid) {
+      const filtered = filteredPantryProducts();
+      grid.innerHTML = renderPantryCards(filtered);
+      grid.querySelectorAll('[data-edit-product]').forEach(el => el.onclick = () => openForm('product', el.dataset.editProduct));
+    }
+  };
+  const sortSel = document.getElementById('pantry-sort');
+  if (sortSel) sortSel.onchange = () => { window._pantrySort = sortSel.value; render(); };
+
+  // settings interactions
+  bindSettingsEvents(ci);
+}
+
+// ===== SETTINGS BIND =====
+function bindSettingsEvents(ci) {
+  if (currentView !== 'settings') return;
+
+  // currency dropdown
+  const curSel = document.getElementById('settings-currency');
+  if (curSel) {
+    curSel.value = currency;
+    curSel.onchange = () => { currency = curSel.value; document.getElementById('currency-sel').value = currency; saveData(); render(); };
+  }
+  // theme toggle
+  ci.querySelectorAll('[data-theme]').forEach(btn => btn.onclick = () => {
+    dark = btn.dataset.theme === 'dark';
+    document.documentElement.classList.toggle('dark', dark);
+    document.getElementById('dark-toggle').textContent = dark ? '☀️' : '🌙';
+    ci.querySelectorAll('[data-theme]').forEach(b => b.classList.toggle('active', b.dataset.theme === (dark?'dark':'light')));
+    saveData();
+  });
+
+  // cat field edits (live, then Save persists)
+  ci.querySelectorAll('[data-cat-field]').forEach(el => el.oninput = () => {
+    const [cid, field] = el.dataset.catField.split('|');
+    const c = catMap[cid]; if (!c) return;
+    c[field] = el.value;
+    // mirror sibling color inputs
+    if (field === 'color') {
+      ci.querySelectorAll(`[data-cat-field="${cid}|color"]`).forEach(sib => { if (sib !== el) sib.value = el.value; });
+    }
+  });
+
+  // auto shade
+  ci.querySelectorAll('[data-cat-recolor]').forEach(btn => btn.onclick = () => {
+    const c = catMap[btn.dataset.catRecolor]; if (!c) return;
+    const shades = deriveShades(c.color);
+    c.soft = shades.soft; c.deep = shades.deep; c.tint = shades.tint;
+    saveCats(); render();
+  });
+
+  // photo upload
+  ci.querySelectorAll('[data-photo-pick]').forEach(btn => btn.onclick = () => {
+    document.getElementById('photo-' + btn.dataset.photoPick).click();
+  });
+  ci.querySelectorAll('[data-cat-photo]').forEach(input => input.onchange = (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const cid = input.dataset.catPhoto;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const c = catMap[cid]; if (!c) return;
+      c.photo = ev.target.result;
+      saveCats();
+      // refresh just this card's preview
+      const prev = document.querySelector(`[data-photo-preview="${cid}"]`);
+      if (prev) prev.innerHTML = `<img src="${c.photo}" alt=""/>`;
+      // re-render topbar pills
+      setupTopbar();
+      showToast(`Photo updated for ${c.name}`);
+    };
+    reader.readAsDataURL(file);
+  });
+  ci.querySelectorAll('[data-photo-clear]').forEach(btn => btn.onclick = () => {
+    const c = catMap[btn.dataset.photoClear]; if (!c) return;
+    c.photo = '';
+    saveCats(); setupTopbar(); render();
+  });
+
+  // save
+  const saveBtn = document.getElementById('settings-save');
+  if (saveBtn) saveBtn.onclick = () => {
+    // refresh derived maps + persist
+    CATS.forEach(c => { catMap[c.id] = c; });
+    saveCats();
+    setupTopbar();
+    showToast('Saved');
+  };
+
+  // export
+  const exp = document.getElementById('settings-export');
+  if (exp) exp.onclick = exportData;
+
+  // import
+  const impBtn = document.getElementById('settings-import');
+  const impFile = document.getElementById('settings-import-file');
+  if (impBtn && impFile) {
+    impBtn.onclick = () => impFile.click();
+    impFile.onchange = (e) => {
+      const file = e.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const wb = XLSX.read(ev.target.result, { type: 'array' });
+          let pCount = 0, sCount = 0;
+          if (wb.SheetNames.includes('Products')) {
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets['Products']);
+            rows.forEach(r => {
+              if (!r.Name) return;
+              const existing = products.find(p => p.name === r.Name);
+              const obj = {
+                id: existing?.id || uid(),
+                name: r.Name, brand: r.Brand||'', category: r.Category||'Food',
+                packSize: r.PackSize||'', price: parseFloat(r.Price)||0, perUnit: r.PerUnit||'',
+                store: r.Store||'', stock: parseInt(r.Stock)||0, rating: r.Rating||'',
+                cats: (r.Cats||'').split(',').filter(Boolean), note: r.Note||'',
+                tone: existing?.tone || CAT_TONE[r.Category] || '#D9CFB6',
+                packAmount: existing?.packAmount || '', packUnit: existing?.packUnit || 'g',
+                updatedDate: new Date().toISOString(),
+              };
+              if (existing) Object.assign(existing, obj); else products.push(obj);
+              pCount++;
+            });
+          }
+          if (wb.SheetNames.includes('Shopping')) {
+            const rows = XLSX.utils.sheet_to_json(wb.Sheets['Shopping']);
+            rows.forEach(r => {
+              if (!r.Name) return;
+              const existing = shopping.find(s => s.name === r.Name);
+              const obj = {
+                id: existing?.id || uid(),
+                name: r.Name, size: r.Size||'', store: r.Store||'',
+                est: parseFloat(r.Est)||'', priority: r.Priority||'soon',
+                for: (r.For||'').split(',').filter(Boolean), done: r.Done === true || r.Done === 'true',
+              };
+              if (existing) Object.assign(existing, obj); else shopping.push(obj);
+              sCount++;
+            });
+          }
+          saveData(); render();
+          showToast(`Imported ${pCount} products, ${sCount} shopping items`);
+        } catch (err) {
+          alert('Import failed: ' + err.message);
+        }
+        impFile.value = '';
+      };
+      reader.readAsArrayBuffer(file);
+    };
+  }
+
+  // reset all
+  const resetBtn = document.getElementById('settings-reset');
+  if (resetBtn) resetBtn.onclick = () => {
+    if (confirm('Wipe ALL data (products, shopping, calendar, vet notes, meds, cat profile edits)? This cannot be undone.')) {
+      localStorage.clear();
+      location.reload();
+    }
+  };
 }
 
 // ===== EXPORT =====
@@ -1928,6 +2411,13 @@ document.getElementById('currency-sel').value = currency;
 setupNav();
 setupTopbar();
 render();
+
+// PWA: register service worker so the app works offline / is installable
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* offline-only, fine to ignore */ });
+  });
+}
 </script>
 </body>
 </html>

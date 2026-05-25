@@ -1,0 +1,18 @@
+{
+  "name": "Pantry",
+  "short_name": "Pantry",
+  "description": "Cat product tracker",
+  "theme_color": "#E9E2D0",
+  "background_color": "#E9E2D0",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjEwOCIgZmlsbD0iI0U5RTJEMCIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI3MiIgcj0iMTM2IiBmaWxsPSIjMkEyNTIxIi8+PHBvbHlnb24gcG9pbnRzPSIxNTIsMTUyIDEzMiwyMzIgMjAwLDIwOCIgZmlsbD0iIzJBMjUyMSIvPjxwb2x5Z29uIHBvaW50cz0iMzYwLDE1MiAzODAsMjMyIDMxMiwyMDgiIGZpbGw9IiMyQTI1MjEiLz48Y2lyY2xlIGN4PSIyMTYiIGN5PSIyNjAiIHI9IjEyIiBmaWxsPSIjRjZGMUU3Ii8+PGNpcmNsZSBjeD0iMjk2IiBjeT0iMjYwIiByPSIxMiIgZmlsbD0iI0Y2RjFFNyIvPjxwb2x5Z29uIHBvaW50cz0iMjU2LDI5MCAyNDQsMzA4IDI2OCwzMDgiIGZpbGw9IiNGNkYxRTciLz48cGF0aCBkPSJNIDIzMiAzMjAgUSAyNTYgMzM2IDI4MCAzMjAiIHN0cm9rZT0iI0Y2RjFFNyIgc3Ryb2tlLXdpZHRoPSI2IiBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L3N2Zz4=",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
