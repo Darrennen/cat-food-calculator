@@ -818,15 +818,11 @@ const cropper = {
     const sy = -this.ty / this.scale;
     const sw = this.frameSize / this.scale;
     const sh = this.frameSize / this.scale;
-    const tmp = new Image();
-    tmp.onload = () => {
-      ctx.drawImage(tmp, sx, sy, sw, sh, 0, 0, out, out);
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      const cb = this.onSave;
-      this.close();
-      if (cb) cb(dataUrl);
-    };
-    tmp.src = this.img.src;
+    ctx.drawImage(this.img, sx, sy, sw, sh, 0, 0, out, out);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    const cb = this.onSave;
+    this.close();
+    if (cb) cb(dataUrl);
   },
 };
 
