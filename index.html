@@ -385,8 +385,12 @@ a{text-decoration:none;color:inherit}
   background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:var(--r-sm);
   font-size:13px;font-weight:600;box-shadow:var(--shadow-card);
   opacity:0;pointer-events:none;transition:opacity 0.2s,transform 0.2s;z-index:200;
+  display:flex;align-items:center;gap:10px;white-space:nowrap;
 }
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+#toast-action{background:transparent;border:1px solid rgba(255,255,255,0.4);color:var(--paper);
+  padding:3px 10px;border-radius:5px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+#toast-action:hover{background:rgba(255,255,255,0.15)}
 
 /* recurring marker */
 .cal-ev .repeat-mark{font-size:9px;opacity:0.7;margin-left:2px}
@@ -653,13 +657,20 @@ function catAvatar(cat, size='md') {
   return `<div class="cat-av ${size}" style="background:${cat.color}">${inner}</div>`;
 }
 
-function showToast(msg) {
+function showToast(msg, action) {
   let t = document.getElementById('toast');
   if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
-  t.textContent = msg;
+  t.innerHTML = `<span>${msg}</span>`;
+  if (action) {
+    const btn = document.createElement('button');
+    btn.id = 'toast-action';
+    btn.textContent = action.label;
+    btn.onclick = () => { t.classList.remove('show'); action.fn(); };
+    t.appendChild(btn);
+  }
   t.classList.add('show');
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(() => t.classList.remove('show'), 1800);
+  showToast._t = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 function hexToRgb(hex) {
@@ -1098,7 +1109,10 @@ views.home = function() {
       <div class="card">
         <div class="card-h">
           <h3>Running low</h3>
-          <span class="badge badge-warn">${low.length}</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="badge badge-warn">${low.length}</span>
+            ${low.length ? `<button class="btn btn-ghost" style="font-size:11px;padding:3px 8px" id="add-all-low">Add all to list</button>` : ''}
+          </div>
         </div>
         ${lowHtml || `<div style="color:var(--mute);font-size:13px;padding:8px 0">All stocked up!</div>`}
       </div>
@@ -2441,6 +2455,23 @@ function bindViewEvents() {
     quickRestock(el.dataset.restock);
   });
 
+  // add all low-stock to shopping list
+  const addAllBtn = document.getElementById('add-all-low');
+  if (addAllBtn) addAllBtn.onclick = () => {
+    const low = products.filter(p => (parseInt(p.stock)||0) <= 1);
+    let added = 0;
+    low.forEach(p => {
+      const onList = shopping.some(s => !s.done && s.name === p.name);
+      if (!onList) {
+        shopping.push({ id:uid(), name:p.name, size:p.packSize||'', for:[...(p.cats||[])], priority:'soon', store:p.store||'', est:parseFloat(p.price)||'', done:false });
+        added++;
+      }
+    });
+    saveData();
+    if (added > 0) { showToast(`${added} item${added>1?'s':''} added to shopping list`); render(); }
+    else showToast('All low-stock items already on the list');
+  };
+
   // stock +/- buttons on pantry cards
   function bindStockCtrl(root) {
     root.querySelectorAll('[data-stock-inc],[data-stock-dec]').forEach(btn => {
@@ -2449,7 +2480,8 @@ function bindViewEvents() {
         const id = btn.dataset.stockInc || btn.dataset.stockDec;
         const p = products.find(x => x.id === id); if (!p) return;
         const delta = btn.dataset.stockInc ? 1 : -1;
-        p.stock = Math.max(0, (parseInt(p.stock)||0) + delta);
+        const prev = parseInt(p.stock)||0;
+        p.stock = Math.max(0, prev + delta);
         p.updatedDate = new Date().toISOString();
         saveData();
         // patch the card in-place without a full re-render
@@ -2460,6 +2492,12 @@ function bindViewEvents() {
           card.querySelector('.product-card-footer span').style.color = stockColor;
           card.querySelector('.product-card-footer span').textContent = stock === 0 ? 'Out' : `${stock} left`;
           card.querySelector('.stock-ctrl-val').textContent = stock;
+        }
+        if (delta < 0 && p.stock === 0) {
+          const onList = shopping.some(s => !s.done && s.name === p.name);
+          if (!onList) showToast(`${p.name} is out`, { label: 'Add to list', fn: () => quickRestock(p.id) });
+        } else if (delta < 0 && p.stock === 1) {
+          showToast(`Only 1 ${p.name} left`);
         }
       };
     });
