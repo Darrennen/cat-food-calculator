@@ -191,6 +191,11 @@ a{text-decoration:none;color:inherit}
 .product-card-name{font-size:13px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .product-card-sub{font-size:11px;color:var(--mute)}
 .product-card-pips{display:flex;gap:3px;margin-top:6px}
+.product-card-footer{display:flex;align-items:center;justify-content:space-between;padding:6px 10px 8px;border-top:1px solid var(--hair);margin-top:4px}
+.stock-ctrl{display:flex;align-items:center;gap:0}
+.stock-ctrl-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--hair);background:var(--cream);color:var(--ink-2);font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.1s;line-height:1}
+.stock-ctrl-btn:hover{background:var(--cream-2);color:var(--ink)}
+.stock-ctrl-val{min-width:28px;text-align:center;font-size:12px;font-family:var(--font-mono);font-weight:600;color:var(--ink)}
 
 /* ===== CALENDAR ===== */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
@@ -1226,12 +1231,23 @@ function renderPantryCards(list) {
   return list.map(p => {
     const tone = p.tone||CAT_TONE[p.category]||'#D9CFB6';
     const pu = calcPerUnit(p.packAmount,p.packUnit,p.price,currency);
+    const stock = parseInt(p.stock)||0;
+    const stockColor = stock === 0 ? 'var(--warn)' : stock <= 1 ? '#E07A2F' : 'var(--ink-2)';
+    const stockLabel = stock === 0 ? 'Out' : `${stock} left`;
     return `<div class="product-card" data-edit-product="${p.id}">
       ${productThumbnail(tone, p.category)}
       <div class="product-card-body">
         <div class="product-card-name" title="${p.name}">${p.name}</div>
         <div class="product-card-sub">${[p.packSize,pu].filter(Boolean).join(' · ')}</div>
         <div class="product-card-pips">${(p.cats||[]).map(catPip).join('')}</div>
+      </div>
+      <div class="product-card-footer">
+        <span style="font-size:11px;font-family:var(--font-mono);font-weight:600;color:${stockColor}">${stockLabel}</span>
+        <div class="stock-ctrl">
+          <button class="stock-ctrl-btn" data-stock-dec="${p.id}" title="Use one">−</button>
+          <span class="stock-ctrl-val">${stock}</span>
+          <button class="stock-ctrl-btn" data-stock-inc="${p.id}" title="Add one">+</button>
+        </div>
       </div>
     </div>`;
   }).join('') || `<div class="empty-state" style="grid-column:1/-1"><div class="empty-emoji">🐈</div><div class="empty-title">No products here</div><div class="empty-sub">Try adjusting the filters, or add a new product to get started.</div></div>`;
@@ -2425,6 +2441,31 @@ function bindViewEvents() {
     quickRestock(el.dataset.restock);
   });
 
+  // stock +/- buttons on pantry cards
+  function bindStockCtrl(root) {
+    root.querySelectorAll('[data-stock-inc],[data-stock-dec]').forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        const id = btn.dataset.stockInc || btn.dataset.stockDec;
+        const p = products.find(x => x.id === id); if (!p) return;
+        const delta = btn.dataset.stockInc ? 1 : -1;
+        p.stock = Math.max(0, (parseInt(p.stock)||0) + delta);
+        p.updatedDate = new Date().toISOString();
+        saveData();
+        // patch the card in-place without a full re-render
+        const card = btn.closest('.product-card');
+        if (card) {
+          const stock = p.stock;
+          const stockColor = stock === 0 ? 'var(--warn)' : stock <= 1 ? '#E07A2F' : 'var(--ink-2)';
+          card.querySelector('.product-card-footer span').style.color = stockColor;
+          card.querySelector('.product-card-footer span').textContent = stock === 0 ? 'Out' : `${stock} left`;
+          card.querySelector('.stock-ctrl-val').textContent = stock;
+        }
+      };
+    });
+  }
+  bindStockCtrl(ci);
+
   // pantry search + sort
   const searchInput = document.getElementById('pantry-search');
   if (searchInput) searchInput.oninput = (e) => {
@@ -2435,6 +2476,7 @@ function bindViewEvents() {
       const filtered = filteredPantryProducts();
       grid.innerHTML = renderPantryCards(filtered);
       grid.querySelectorAll('[data-edit-product]').forEach(el => el.onclick = () => openForm('product', el.dataset.editProduct));
+      bindStockCtrl(grid);
     }
   };
   const sortSel = document.getElementById('pantry-sort');
