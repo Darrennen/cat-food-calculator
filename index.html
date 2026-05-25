@@ -512,10 +512,10 @@ a{text-decoration:none;color:inherit}
 <script>
 // ===== CATS =====
 const CATS = [
-  { id:'macson',   name:'Macson',   breed:'Russian Blue', age:'6 yrs', weight:'4.8 kg', color:'#6B8AAE', soft:'#E4ECF4', deep:'#3F5874', tint:'#F1F5FA',  initial:'M', vibe:'Loaf-shaped diplomat' },
-  { id:'miumiu',   name:'Miumiu',   breed:'Calico',       age:'4 yrs', weight:'3.6 kg', color:'#D87A6E', soft:'#F6E0DC', deep:'#8A3F36', tint:'#FAEFEC',  initial:'I', vibe:'Zoomie connoisseur' },
-  { id:'duoduo',   name:'Duoduo',   breed:'Orange Tabby', age:'7 yrs', weight:'5.4 kg', color:'#D9A05A', soft:'#F4E5CC', deep:'#8C5A1F', tint:'#FBF3E2',  initial:'D', vibe:'Snack motivated' },
-  { id:'llaollao', name:'Llaollao', breed:'Tuxedo',       age:'3 yrs', weight:'4.1 kg', color:'#8AA77B', soft:'#E1EAD9', deep:'#506849', tint:'#EEF3E9',  initial:'L', vibe:'Bird-watching scholar' },
+  { id:'macson',   name:'Macson',   breed:'Russian Blue', age:'6 yrs', weight:'4.8 kg', color:'#6B8AAE', soft:'#E4ECF4', deep:'#3F5874', tint:'#F1F5FA',  initial:'M', vibe:'Loaf-shaped diplomat',   photo:'/cats/macson.jpg' },
+  { id:'miumiu',   name:'Miumiu',   breed:'Calico',       age:'4 yrs', weight:'3.6 kg', color:'#D87A6E', soft:'#F6E0DC', deep:'#8A3F36', tint:'#FAEFEC',  initial:'I', vibe:'Zoomie connoisseur',    photo:'/cats/miumiu.jpg' },
+  { id:'duoduo',   name:'Duoduo',   breed:'Orange Tabby', age:'7 yrs', weight:'5.4 kg', color:'#D9A05A', soft:'#F4E5CC', deep:'#8C5A1F', tint:'#FBF3E2',  initial:'D', vibe:'Snack motivated',        photo:'/cats/duoduo.jpg' },
+  { id:'llaollao', name:'Llaollao', breed:'Tuxedo',       age:'3 yrs', weight:'4.1 kg', color:'#8AA77B', soft:'#E1EAD9', deep:'#506849', tint:'#EEF3E9',  initial:'L', vibe:'Bird-watching scholar', photo:'/cats/llaollao.jpg' },
 ];
 const catMap = {};
 CATS.forEach(c => catMap[c.id] = c);
@@ -541,13 +541,16 @@ function loadData() {
   try { meds      = JSON.parse(localStorage.getItem('pantry_meds') || '[]'); } catch(e){ meds=[]; }
   currency = localStorage.getItem('pantry_currency') || 'RM';
   dark = localStorage.getItem('pantry_dark') === 'true';
-  // Merge saved cat profile edits onto hardcoded defaults
+  // Merge saved cat profile edits onto hardcoded defaults (skip empty fields so defaults survive)
   try {
     const savedCats = JSON.parse(localStorage.getItem('pantry_cats') || 'null');
     if (savedCats && Array.isArray(savedCats)) {
       savedCats.forEach(saved => {
         const existing = CATS.find(c => c.id === saved.id);
-        if (existing) Object.assign(existing, saved);
+        if (!existing) return;
+        Object.keys(saved).forEach(k => {
+          if (saved[k] !== '' && saved[k] != null) existing[k] = saved[k];
+        });
       });
     }
   } catch(e) {}
